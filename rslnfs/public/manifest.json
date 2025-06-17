@@ -1,0 +1,21 @@
+{
+  "name": "Baitk VR",
+  "short_name": "BaitkVR",
+  "description": "تطبيق عقارات عالمي يدعم الواقع الافتراضي والبانوراما 360 و3D.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e0eafc",
+  "theme_color": "#00bcd4",
+  "icons": [
+    {
+      "src": "/images/palace.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    },
+    {
+      "src": "/images/palace.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
