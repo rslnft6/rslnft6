@@ -2,6 +2,7 @@ import '../styles/globals.css';
 import type { AppProps } from "next/app";
 import '../data/i18n';
 import { useEffect, useState } from 'react';
+import AnimatedBackground from '../components/AnimatedBackground';
 
 function InstallPWAButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
@@ -24,6 +25,7 @@ function InstallPWAButton() {
 
 export default function App({ Component, pageProps }: AppProps) {
   return <>
+    <AnimatedBackground />
     <InstallPWAButton />
     <Component {...pageProps} />
   </>;
