@@ -109,7 +109,7 @@ export default function Home() {
           <main>
             {/* إضافة شعار baitkvr عالمي أعلى الصفحة */}
             <div style={{display:'flex',alignItems:'center',justifyContent:'center',margin:'32px 0 16px 0'}}>
-              <img src="/images/vr-house-logo.png" alt="baitkvr logo" style={{width:60,marginLeft:12}} />
+              <img src="/logo.png" alt="baitkvr logo" style={{width:60,marginLeft:12}} />
               <span style={{fontWeight:'bold',fontSize:36,color:'#00bcd4',letterSpacing:2,textShadow:'0 2px 8px #e0e0e0'}}>Baitkvr</span>
             </div>
             <h1 className="section-title">{t('slider_properties')}</h1>
@@ -169,7 +169,7 @@ export default function Home() {
             </div>
             {/* سلايدر الوحدات الأكثر مشاهدة */}
             <h1 className="section-title" style={{color:'#ff9800',fontWeight:'bold',fontSize:28,marginTop:24,display:'flex',alignItems:'center',justifyContent:'center',gap:12}}>
-              <img src="/images/vr-house-logo.png" alt="baitkvr logo" style={{width:48}} />
+              <img src="/logo.png" alt="baitkvr logo" style={{width:48}} />
               الوحدات الأكثر مشاهدة
             </h1>
             <Swiper spaceBetween={12} slidesPerView={2} style={{marginBottom: 32}}>

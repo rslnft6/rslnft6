@@ -40,7 +40,7 @@ const MapView: React.FC<{ properties?: Property[] }> = ({ properties = getAllPro
           p.type === 'clinic' ? '/images/clinic.jpg' :
           p.type === 'shop' ? '/images/shop.jpg' :
           p.type === 'office' ? '/images/office.jpg' :
-          '/images/vr-house-logo.png';
+          '/logo.png';
         const el = document.createElement('div');
         el.style.width = '44px';
         el.style.height = '44px';
