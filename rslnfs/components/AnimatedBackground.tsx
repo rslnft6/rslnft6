@@ -1,15 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import styles from '../styles/AnimatedBackground.module.css';
 
-const bgCount = 10;
-const bgImages = Array.from({ length: bgCount }, (_, i) => `/images/bg${i + 1}.png`);
+// قائمة الصور المتوفرة مع الامتدادات المختلفة
+const bgImages = [
+  '/images/bg1.png',
+  '/images/bg2.png',
+  '/images/bg5.png',
+  '/images/bg10.jpg',
+];
 
 export default function AnimatedBackground() {
   const [index, setIndex] = useState(0);
 
   useEffect(() => {
     const interval = setInterval(() => {
-      setIndex((prev) => (prev + 1) % bgCount);
+      setIndex((prev) => (prev + 1) % bgImages.length);
     }, 5000); // كل 5 ثواني تتغير الخلفية
     return () => clearInterval(interval);
   }, []);
