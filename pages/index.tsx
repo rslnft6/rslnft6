@@ -21,6 +21,7 @@ import VideoTour from '../components/VideoTour';
 import StatsBox from '../components/StatsBox';
 import AnimatedBackground from '../components/AnimatedBackground';
 import ImagesSlider from '../components/ImagesSlider';
+import SmartChat from '../components/SmartChat';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -246,6 +247,7 @@ export default function Home() {
             <h1 className="section-title">معرض صور بانوراما 360°</h1>
             <VR360Gallery />
             <Reviews />
+            <SmartChat />
             <VideoTour />
             <StatsBox />
             {/* <AdminPanel /> تم إزالته من الصفحة الرئيسية */}
