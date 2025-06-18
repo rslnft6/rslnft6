@@ -116,7 +116,7 @@ export default function Home() {
       borderRadius: 24,
       boxShadow: '0 2px 32px rgba(0,0,0,0.08)'
     }}>
-      <AnimatedBackground />
+      {/* <AnimatedBackground /> */}
       <>
         <Head>
           <title>تطبيق عقارات عالمي</title>
