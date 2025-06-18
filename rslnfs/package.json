@@ -2,11 +2,14 @@
   "name": "realstatelive",
   "version": "0.1.0",
   "private": true,
+  "homepage": "https://rslnft6.github.io/",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "export": "next build && next export",
+    "deploy": "npm run export && npx gh-pages -d out"
   },
   "dependencies": {
     "@react-oauth/google": "^0.12.2",
