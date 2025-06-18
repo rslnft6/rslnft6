@@ -2,7 +2,7 @@
 export const openApiDoc = {
   openapi: '3.0.0',
   info: {
-    title: 'BaitkVR Open API',
+    title: 'Realstatelive Open API',
     version: '1.0.0',
     description: 'نقطة نهاية مفتوحة لعرض جميع الوحدات العقارية بصيغة JSON.'
   },

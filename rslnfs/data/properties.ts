@@ -36,7 +36,7 @@ function generateProperties() {
   ];
   const compounds = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `كمبوند ${i + 1}` }));
   const developers = Array.from({ length: 10 }, (_, i) => ({ id: i + 1, name: `مطور ${i + 1}` }));
-  let arr: any[] = [];
+  const arr: any[] = [];
   let id = 1;
   types.forEach((t) => {
     for (let i = 0; i < 50; i++) {

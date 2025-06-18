@@ -3,7 +3,7 @@ import React from 'react';
 const QRCode = require('qrcode.react');
 
 const ShareBox: React.FC<{ title: string; url: string; image?: string }> = ({ title, url, image }) => {
-  const shareText = encodeURIComponent(`${title} - اكتشف الوحدة على baitkvr`);
+  const shareText = encodeURIComponent(`${title} - اكتشف الوحدة على Realstatelive`);
   const shareUrl = encodeURIComponent(url);
   return (
     <div style={{display:'flex',gap:16,alignItems:'center',flexWrap:'wrap',margin:'16px 0'}}>

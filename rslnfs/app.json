@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "BaitVR",
-    "slug": "baitvr",
+    "name": "Realstatelive",
+    "slug": "realstatelive",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./public/favicon.ico",
@@ -16,10 +16,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.baitvr.app"
+      "bundleIdentifier": "com.realstatelive.app"
     },
     "android": {
-      "package": "com.baitvr.app"
+      "package": "com.realstatelive.app"
     },
     "web": {
       "favicon": "./public/favicon.ico"
