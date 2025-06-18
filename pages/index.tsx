@@ -20,6 +20,7 @@ import { notifyUser } from '../services/notifications';
 import VideoTour from '../components/VideoTour';
 import StatsBox from '../components/StatsBox';
 import AnimatedBackground from '../components/AnimatedBackground';
+import ImagesSlider from '../components/ImagesSlider';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -59,11 +60,30 @@ export default function Home() {
   const [finance, setFinance] = useState('');
   const [purpose, setPurpose] = useState(''); // إضافة حالة الفلترة للبيع/إيجار
   const [selectedPanorama, setSelectedPanorama] = useState<string | null>(null);
+  const [pendingFilters, setPendingFilters] = useState({
+    search: '', type: '', country: '', compound: '', developer: '', finance: '', purpose: ''
+  });
 
   // البحث الذكي
   const handleSmartSearch = (q: string) => {
     setSearch(q);
     setFiltered(smartSearch(q, properties));
+  };
+
+  // تحديث الفلاتر المؤقتة
+  const handleFilterChange = (key: string, value: string) => {
+    setPendingFilters(f => ({ ...f, [key]: value }));
+  };
+
+  // تطبيق الفلاتر عند الضغط على زر بحث
+  const applyFilters = () => {
+    setSearch(pendingFilters.search);
+    setType(pendingFilters.type);
+    setCountry(pendingFilters.country);
+    setCompound(pendingFilters.compound);
+    setDeveloper(pendingFilters.developer);
+    setFinance(pendingFilters.finance);
+    setPurpose(pendingFilters.purpose);
   };
 
   // فلترة الوحدات حسب البحث
@@ -83,6 +103,12 @@ export default function Home() {
     }
   }, [filtered, search]);
 
+  useEffect(() => {
+    setPendingFilters({
+      search, type, country, compound, developer, finance, purpose
+    });
+  }, [search, type, country, compound, developer, finance, purpose]);
+
   return (
     <div className="container" style={{
       minHeight: '100vh',
@@ -101,9 +127,18 @@ export default function Home() {
           <link rel="icon" href="/favicon.ico" />
         </Head>
         <div className={`${geistSans.variable} ${geistMono.variable}`}>
-          <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:16}}>
-            <button onClick={()=>push('/', undefined, { locale: 'ar' })} style={{background:locale==='ar'?'#00bcd4':'#eee',color:locale==='ar'?'#fff':'#222',border:'none',borderRadius:8,padding:'6px 16px',fontWeight:'bold'}}>العربية</button>
-            <button onClick={()=>push('/', undefined, { locale: 'en' })} style={{background:locale==='en'?'#00bcd4':'#eee',color:locale==='en'?'#fff':'#222',border:'none',borderRadius:8,padding:'6px 16px',fontWeight:'bold'}}>English</button>
+          <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
+            <div>
+              <button onClick={()=>push('/', undefined, { locale: 'ar' })} style={{background:locale==='ar'?'#00bcd4':'#eee',color:locale==='ar'?'#fff':'#222',border:'none',borderRadius:8,padding:'6px 16px',fontWeight:'bold'}}>
+                العربية
+              </button>
+              <button onClick={()=>push('/', undefined, { locale: 'en' })} style={{background:locale==='en'?'#00bcd4':'#eee',color:locale==='en'?'#fff':'#222',border:'none',borderRadius:8,padding:'6px 16px',fontWeight:'bold',marginLeft:8}}>
+                English
+              </button>
+            </div>
+            <button onClick={()=>window.location.href='/login'} style={{background:'#2196f3',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold',fontSize:16,cursor:'pointer'}}>
+              تسجيل الدخول
+            </button>
           </div>
           <main>
             {/* شعار Realstatelive أعلى الصفحة */}
@@ -113,9 +148,9 @@ export default function Home() {
             </div>
             <h1 className="section-title">{t('slider_properties')}</h1>
             <div className="search-bar" style={{background:'#fff',borderRadius:16,padding:16,boxShadow:'0 2px 12px #e0e0e0',marginBottom:24,flexWrap:'wrap',display:'flex',gap:8}}>
-              <VoiceSearch onResult={handleSmartSearch} />
-              <input placeholder="بحث عن وحدة..." value={search} onChange={e => handleSmartSearch(e.target.value)} style={{fontSize:18,border:'1px solid #00bcd4',borderRadius:8,padding:8,marginLeft:8,minWidth:160,flex:'1 1 120px'}} />
-              <select value={type} onChange={e => setType(e.target.value)} style={{color:'#00bcd4',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
+              <VoiceSearch onResult={text => handleFilterChange('search', text)} />
+              <input placeholder="بحث عن وحدة..." value={pendingFilters.search} onChange={e => handleFilterChange('search', e.target.value)} style={{fontSize:18,border:'1px solid #00bcd4',borderRadius:8,padding:8,marginLeft:8,minWidth:160,flex:'1 1 120px'}} />
+              <select value={pendingFilters.type} onChange={e => handleFilterChange('type', e.target.value)} style={{color:'#00bcd4',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
                 <option value="">الكل</option>
                 <option value="palace">قصور</option>
                 <option value="villa">فيلات</option>
@@ -128,7 +163,7 @@ export default function Home() {
                 <option value="shop">محلات</option>
                 <option value="office">مكاتب</option>
               </select>
-              <select value={country} onChange={e => setCountry(e.target.value)} style={{color:'#ff9800',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
+              <select value={pendingFilters.country} onChange={e => handleFilterChange('country', e.target.value)} style={{color:'#ff9800',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
                 <option value="">كل الدول</option>
                 <option value="مصر">مصر</option>
                 <option value="الإمارات">الإمارات</option>
@@ -141,30 +176,29 @@ export default function Home() {
                 <option value="الجزائر">الجزائر</option>
                 <option value="المغرب">المغرب</option>
               </select>
-              <select value={compound} onChange={e => setCompound(e.target.value)} style={{color:'#00e676',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
+              <select value={pendingFilters.compound} onChange={e => handleFilterChange('compound', e.target.value)} style={{color:'#00e676',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
                 <option value="">كل الكمباوندات</option>
                 {compounds.map(c => (
                   <option key={c.id} value={c.name}>{c.name}</option>
                 ))}
               </select>
-              <select value={developer} onChange={e => setDeveloper(e.target.value)} style={{color:'#2196f3',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
+              <select value={pendingFilters.developer} onChange={e => handleFilterChange('developer', e.target.value)} style={{color:'#2196f3',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
                 <option value="">كل المطورين</option>
                 {developers.map(d => (
                   <option key={d.id} value={d.name}>{d.name}</option>
                 ))}
               </select>
-              <select value={finance} onChange={e => setFinance(e.target.value)} style={{color:'#ff1744',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
+              <select value={pendingFilters.finance} onChange={e => handleFilterChange('finance', e.target.value)} style={{color:'#ff1744',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
                 <option value="">كل خيارات التمويل</option>
                 <option value="تمويل عقاري">تمويل عقاري</option>
                 <option value="نقدي">نقدي</option>
               </select>
-              {/* إضافة فلترة للبيع/إيجار */}
-              <select value={purpose} onChange={e => setPurpose(e.target.value)} style={{color:'#ff9800',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
+              <select value={pendingFilters.purpose} onChange={e => handleFilterChange('purpose', e.target.value)} style={{color:'#ff9800',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
                 <option value="">الكل</option>
                 <option value="للبيع">للبيع</option>
                 <option value="للإيجار">للإيجار</option>
               </select>
-              <button onClick={()=>window.location.href='/login'} style={{background:'#2196f3',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold',fontSize:16,marginLeft:8,cursor:'pointer'}}>تسجيل الدخول</button>
+              <button onClick={applyFilters} style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:'bold',fontSize:16,marginLeft:8,cursor:'pointer'}}>بحث</button>
             </div>
             {/* سلايدر الوحدات الأكثر مشاهدة */}
             <h1 className="section-title" style={{color:'#ff9800',fontWeight:'bold',fontSize:28,marginTop:24,display:'flex',alignItems:'center',justifyContent:'center',gap:12}}>
@@ -203,7 +237,7 @@ export default function Home() {
             </Swiper>
             <h1 className="section-title">خريطة العقارات</h1>
             <div className="map-section">
-              <MapView />
+              <MapView properties={filteredProperties} />
             </div>
             <h1 className="section-title">تجربة الواقع الافتراضي (VR)</h1>
             <div className="vr-section">
