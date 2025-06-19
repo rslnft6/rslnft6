@@ -34,5 +34,6 @@ export default function AdminPage() {
     );
   }
 
+  // بعد تسجيل الدخول، أظهر لوحة التحكم الفعلية
   return <div style={{padding:40,maxWidth:1100,margin:'auto'}}><AdminPanel /></div>;
 }
