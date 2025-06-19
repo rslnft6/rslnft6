@@ -128,10 +128,10 @@ export default function Home() {
       <div className={`${geistSans.variable} ${geistMono.variable}`}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
           <div>
-            <button onClick={()=>push('/', undefined, { locale: 'ar' })} style={{background:locale==='ar'?'#00bcd4':'#eee',color:locale==='ar'?'#fff':'#222',border:'none',borderRadius:8,padding:'6px 16px',fontWeight:'bold'}}>
+            <button onClick={()=>push('/', undefined, { locale: 'ar' })} style={{background:locale==='ar'?'#00bcd4':'#eee',color:locale==='ar'?'#fff':'#222',border:'none',borderRadius:8,padding:'6px 16px',fontWeight:'bold',fontSize:16,minWidth:110}}>
               العربية
             </button>
-            <button onClick={()=>push('/', undefined, { locale: 'en' })} style={{background:locale==='en'?'#00bcd4':'#eee',color:locale==='en'?'#fff':'#222',border:'none',borderRadius:8,padding:'6px 16px',fontWeight:'bold',marginLeft:8}}>
+            <button onClick={()=>push('/', undefined, { locale: 'en' })} style={{background:locale==='en'?'#00bcd4':'#eee',color:locale==='en'?'#fff':'#222',border:'none',borderRadius:8,padding:'6px 16px',fontWeight:'bold',fontSize:16,minWidth:110,marginLeft:8}}>
               English
             </button>
           </div>
@@ -271,8 +271,10 @@ export default function Home() {
               </SwiperSlide>
             ))}
           </Swiper>
-          {/* الدردشة الذكية */}
-          <SmartChat />
+          {/* الدردشة الذكية العائمة */}
+          <div style={{position:'fixed',bottom:24,right:24,zIndex:9999}}>
+            <SmartChat />
+          </div>
           {/* خريطة العقارات */}
           <h1 className="section-title">خريطة العقارات</h1>
           <div className="map-section" style={{minHeight:400, height:400, width:'100%', borderRadius:16, overflow:'hidden', boxShadow:'0 2px 12px #e0e0e0', marginBottom:32, background:'#f5f7fa', position:'relative'}}>

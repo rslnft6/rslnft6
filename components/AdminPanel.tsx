@@ -370,6 +370,9 @@ const AdminPanel: React.FC = () => {
       {tab==='الإعدادات' && (
         <div>
           <h4>من نحن (يمكن رفع حتى 5 صور)</h4>
+          <div style={{background:'#e0f7fa',padding:16,borderRadius:12,margin:'8px 0',color:'#00bcd4',fontWeight:'bold',fontSize:18}}>
+            منصة Realstatelive هي منصة عقارية عالمية تهدف إلى ربط المطورين والعملاء والبنوك وشركات التمويل في مكان واحد، مع دعم أحدث تقنيات الذكاء الاصطناعي والواقع الافتراضي. نؤمن أن الشفافية وسهولة الوصول للمعلومة هما أساس نجاح السوق العقاري الحديث. هدفنا تمكين الجميع من اتخاذ قرارات أفضل وتحقيق أحلامهم العقارية بسهولة وأمان.
+          </div>
           <input type="file" accept="image/*" multiple onChange={handleAboutImages} />
           <div style={{display:'flex',gap:8,margin:'8px 0'}}>
             {settings.aboutImages && settings.aboutImages.map((img:string,i:number)=>(<img key={i} src={img} alt="about" style={{width:60,borderRadius:8}} />))}
