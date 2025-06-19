@@ -57,7 +57,7 @@ const MapView: React.FC<MapViewProps> = ({ properties }) => {
                 <img src='${p.image || iconUrl}' alt='${p.title}' style='width:100%;height:100px;object-fit:cover;border-radius:8px;margin-bottom:8px' />
                 <div style='font-weight:bold;color:#00bcd4;font-size:18px;margin-bottom:4px'>${p.title}</div>
                 <div style='color:#ff9800;font-size:15px;margin-bottom:4px'>${p.location || ''}</div>
-                <div style='color:#2196f3;font-size:15px;margin-bottom:4px'>${p.compound ? 'كمباوند: ' + p.compound : ''}</div>
+                <div style='color:#2196f3;font-size:15px;margin-bottom:4px;font-weight:bold'>${p.compound ? '🏢 ' + p.compound : ''}</div>
                 <button style='background:#2196f3;color:#fff;border:none;border-radius:8px;padding:6px 18px;font-weight:bold;cursor:pointer;margin-top:8px' onclick="window.location.href='/property/${p.id}'">تفاصيل الوحدة</button>
               </div>
             `)
