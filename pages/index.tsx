@@ -145,19 +145,26 @@ export default function Home() {
             <img src="/images/logo1.png" alt="Realstatelive logo" style={{width:60,marginLeft:12}} />
             <span style={{fontWeight:'bold',fontSize:36,color:'#00bcd4',letterSpacing:2,textShadow:'0 2px 8px #e0e0e0'}}>Realstatelive</span>
           </div>
-          {/* شريط إعلانات متحرك (بديل marquee باستخدام CSS) */}
+          {/* شريط إعلانات متحرك بلغات متعددة */}
           <div style={{width:'100%',overflow:'hidden',margin:'0 auto 16px auto',direction:'rtl'}}>
             <div style={{
               display:'inline-block',
               whiteSpace:'nowrap',
-              animation:'marquee 15s linear infinite',
+              animation:'marquee 30s linear infinite',
               color:'#ff9800',
               fontWeight:'bold',
               fontSize:20,
               padding:'8px 0',
               minWidth:'100%'
             }}>
-              الف مليون مبروك يا كيرلوس ويا مصطفي ويا توني وان شاء الله لاكبر منصه فيزالعالم
+              <span style={{marginRight:40}}>فرحنا بوجودك معنا!</span>
+              <span style={{marginRight:40}}>We are happy to have you!</span>
+              <span style={{marginRight:40}}>Nous sommes ravis de vous accueillir!</span>
+              <span style={{marginRight:40}}>¡Nos alegra tenerte con nosotros!</span>
+              <span style={{marginRight:40}}>سعيدين بلقائك!</span>
+              <span style={{marginRight:40}}>Happy to see you!</span>
+              <span style={{marginRight:40}}>Heureux de vous voir!</span>
+              <span style={{marginRight:40}}>¡Feliz de verte!</span>
             </div>
           </div>
           <style>{`
@@ -220,8 +227,30 @@ export default function Home() {
             </select>
             <button onClick={applyFilters} style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:'bold',fontSize:16,marginLeft:8,cursor:'pointer'}}>بحث</button>
           </div>
-          {/* سلايدر صور */}
-          <ImagesSlider />
+          {/* سلايدر صور متحرك بالعرض */}
+          <div style={{width:'100%',overflow:'hidden',margin:'0 auto 24px auto',direction:'ltr'}}>
+            <div style={{
+              display:'flex',
+              gap:24,
+              animation:'slider-horizontal 24s linear infinite',
+              alignItems:'center',
+              minWidth:'100%'
+            }}>
+              <img src="/images/bg1.png" alt="bg1" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
+              <img src="/images/bg2.png" alt="bg2" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
+              <img src="/images/bg10.jpg" alt="bg10" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
+              {/* تكرار الصور لعمل حلقة مستمرة */}
+              <img src="/images/bg1.png" alt="bg1-2" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
+              <img src="/images/bg2.png" alt="bg2-2" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
+              <img src="/images/bg10.jpg" alt="bg10-2" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
+            </div>
+          </div>
+          <style>{`
+            @keyframes slider-horizontal {
+              0% { transform: translateX(0); }
+              100% { transform: translateX(-50%); }
+            }
+          `}</style>
           {/* الوحدات الأكثر مشاهدة بناءً على الفلترة */}
           <div style={{display:'flex',alignItems:'center',gap:8,margin:'24px 0 8px 0',justifyContent:'center'}}>
             <img src="/images/logo1.png" alt="logo" style={{width:36}} />

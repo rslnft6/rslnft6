@@ -24,7 +24,7 @@ const initialForm = {
   details: '',
 };
 
-const TABS = ['الوحدات', 'المطورين', 'الكمباوندات', 'الإعلانات', 'المستخدمون'];
+const TABS = ['الوحدات', 'المطورين', 'الكمباوندات', 'الإعلانات', 'المستخدمون', 'الإعدادات'];
 
 const AdminPanel: React.FC = () => {
   const [form, setForm] = useState<any>(initialForm);
@@ -147,6 +147,38 @@ const AdminPanel: React.FC = () => {
   useEffect(() => {
     localStorage.setItem('users', JSON.stringify(users));
   }, [users]);
+
+  // إعدادات عامة (تواصل اجتماعي، من نحن، شركاؤنا)
+  const [settings, setSettings] = useState<any>({
+    aboutImages: [],
+    social: {
+      whatsapp: '', phone: '', discord: '', telegram: '', instagram: '', facebook: '', snapchat: '', tiktok: ''
+    },
+    partners: []
+  });
+  useEffect(() => {
+    const saved = localStorage.getItem('settings');
+    if (saved) setSettings(JSON.parse(saved));
+  }, []);
+  useEffect(() => {
+    localStorage.setItem('settings', JSON.stringify(settings));
+  }, [settings]);
+  const handleSocialChange = (e: any) => {
+    const { name, value } = e.target;
+    setSettings((s: any) => ({ ...s, social: { ...s.social, [name]: value } }));
+  };
+  const handleAboutImages = (e: any) => {
+    const files = Array.from(e.target.files || []);
+    const urls = files.map((file: any) => URL.createObjectURL(file));
+    setSettings((s: any) => ({ ...s, aboutImages: [...(s.aboutImages || []), ...urls].slice(0,5) }));
+  };
+  const handleAddPartner = (e: any) => {
+    e.preventDefault();
+    const name = e.target.partnerName.value;
+    const logo = e.target.partnerLogo.files[0] ? URL.createObjectURL(e.target.partnerLogo.files[0]) : '';
+    setSettings((s: any) => ({ ...s, partners: [...(s.partners || []), { name, logo }] }));
+    e.target.reset();
+  };
 
   return (
     <div style={{background:'#fff',borderRadius:16,padding:24,boxShadow:'0 2px 16px #e0e0e0',margin:'32px 0'}}>
@@ -332,6 +364,40 @@ const AdminPanel: React.FC = () => {
           <div style={{marginTop:24,padding:16,background:'#e0eafc',borderRadius:12}}>
             <b>نظام التسكين الذكي للمطورين (قريباً):</b>
             <p style={{margin:'8px 0 0 0',color:'#555'}}>سيتم هنا عرض اقتراحات تسكين الوحدات على المطورين تلقائياً بناءً على الذكاء الاصطناعي واحتياجات السوق.</p>
+          </div>
+        </div>
+      )}
+      {tab==='الإعدادات' && (
+        <div>
+          <h4>من نحن (يمكن رفع حتى 5 صور)</h4>
+          <input type="file" accept="image/*" multiple onChange={handleAboutImages} />
+          <div style={{display:'flex',gap:8,margin:'8px 0'}}>
+            {settings.aboutImages && settings.aboutImages.map((img:string,i:number)=>(<img key={i} src={img} alt="about" style={{width:60,borderRadius:8}} />))}
+          </div>
+          <h4>وسائل التواصل الاجتماعي</h4>
+          <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
+            <input name="whatsapp" placeholder="واتساب" value={settings.social.whatsapp} onChange={handleSocialChange} style={{width:120}} />
+            <input name="phone" placeholder="رقم الهاتف" value={settings.social.phone} onChange={handleSocialChange} style={{width:120}} />
+            <input name="discord" placeholder="Discord" value={settings.social.discord} onChange={handleSocialChange} style={{width:120}} />
+            <input name="telegram" placeholder="Telegram" value={settings.social.telegram} onChange={handleSocialChange} style={{width:120}} />
+            <input name="instagram" placeholder="Instagram" value={settings.social.instagram} onChange={handleSocialChange} style={{width:120}} />
+            <input name="facebook" placeholder="Facebook" value={settings.social.facebook} onChange={handleSocialChange} style={{width:120}} />
+            <input name="snapchat" placeholder="Snapchat" value={settings.social.snapchat} onChange={handleSocialChange} style={{width:120}} />
+            <input name="tiktok" placeholder="TikTok" value={settings.social.tiktok} onChange={handleSocialChange} style={{width:120}} />
+          </div>
+          <h4 style={{marginTop:24}}>شركاؤنا (شعار واسم)</h4>
+          <form onSubmit={handleAddPartner} style={{display:'flex',gap:8,alignItems:'center',marginBottom:8}}>
+            <input name="partnerName" placeholder="اسم الشريك" style={{width:160}} />
+            <input name="partnerLogo" type="file" accept="image/*" />
+            <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'6px 16px',fontWeight:'bold',cursor:'pointer'}}>إضافة</button>
+          </form>
+          <div style={{display:'flex',gap:12,flexWrap:'wrap'}}>
+            {settings.partners && settings.partners.map((p:any,i:number)=>(
+              <div key={i} style={{border:'1px solid #eee',borderRadius:8,padding:8,minWidth:120,maxWidth:160,textAlign:'center'}}>
+                {p.logo && <img src={p.logo} alt={p.name} style={{width:40,marginBottom:4}} />}
+                <div>{p.name}</div>
+              </div>
+            ))}
           </div>
         </div>
       )}
