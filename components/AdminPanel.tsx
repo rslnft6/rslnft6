@@ -4,6 +4,7 @@ import { developers } from '../data/developers';
 import { getAllProperties } from '../data/properties';
 import ExportCSV from './ExportCSV';
 import { FaHome, FaBuilding, FaUsers, FaBullhorn, FaCogs, FaUserTie } from 'react-icons/fa';
+import { addEmployee, addUnit } from '../services/firestoreActions';
 
 const initialForm = {
   title: '',
@@ -230,53 +231,21 @@ const AdminPanel: React.FC = () => {
           <div>
             <div style={{display:'flex',flexWrap:'wrap',gap:24}}>
               <div style={{flex:1,minWidth:320}}>
-                <h4>إضافة وحدة جديدة</h4>
-                <input name="title" placeholder="اسم الوحدة" value={form.title} onChange={handleChange} style={{width:'100%',margin:'4px 0'}} />
-                <select name="type" value={form.type} onChange={handleChange} style={{width:'100%',margin:'4px 0'}}>
-                  <option value="">نوع الوحدة</option>
-                  <option value="palace">قصر</option>
-                  <option value="villa">فيلا</option>
-                  <option value="apartment">شقة</option>
-                  <option value="clinic">عيادة</option>
-                  <option value="shop">محل</option>
-                  <option value="office">مكتب</option>
-                  <option value="penthouse">بنتهاوس</option>
-                  <option value="townhouse">تاون هاوس</option>
-                </select>
-                <select name="developer" value={form.developer} onChange={handleChange} style={{width:'100%',margin:'4px 0'}}>
-                  <option value="">المطور العقاري</option>
-                  {developers.map(d => <option key={d.id} value={d.name}>{d.name}</option>)}
-                </select>
-                <select name="compound" value={form.compound} onChange={handleChange} style={{width:'100%',margin:'4px 0'}}>
-                  <option value="">الكمباوند</option>
-                  {compounds.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                </select>
-                <input name="owner" placeholder="اسم المالك (اختياري)" value={form.owner} onChange={handleChange} style={{width:'100%',margin:'4px 0'}} />
-                <input name="area" placeholder="المساحة (م²)" value={form.area} onChange={handleChange} style={{width:'100%',margin:'4px 0'}} />
-                <input name="rooms" placeholder="عدد الغرف" value={form.rooms} onChange={handleChange} style={{width:'100%',margin:'4px 0'}} />
-                <input name="baths" placeholder="عدد الحمامات" value={form.baths} onChange={handleChange} style={{width:'100%',margin:'4px 0'}} />
-                <label><input type="checkbox" name="pool" checked={form.pool} onChange={handleChange} /> حمام سباحة</label>
-                <label><input type="checkbox" name="garden" checked={form.garden} onChange={handleChange} /> جاردن</label>
-                <input name="contact" placeholder="بيانات التواصل" value={form.contact} onChange={handleChange} style={{width:'100%',margin:'4px 0'}} />
-                <input name="details" placeholder="تفاصيل إضافية" value={form.details} onChange={handleChange} style={{width:'100%',margin:'4px 0'}} />
-                <div style={{margin:'8px 0'}}>صور بانوراما 360:
-                  <input type="file" accept="image/*" multiple onChange={e => handleFile(e, 'panorama360')} />
-                </div>
-                <div style={{margin:'8px 0'}}>نماذج 3D (GLB):
-                  <input type="file" accept=".glb,.gltf,model/gltf-binary" multiple onChange={e => handleFile(e, 'model3d')} />
-                </div>
-                <div style={{margin:'8px 0'}}>صور السلايدر:
-                  <input type="file" accept="image/*" multiple onChange={e => handleFile(e, 'sliderImages')} />
-                </div>
-                <div style={{margin:'8px 0'}}>لون الخط:
-                  <input type="color" name="fontColor" value={form.fontColor} onChange={handleChange} />
-                </div>
-                <div style={{margin:'8px 0'}}>حجم الخط:
-                  <input type="number" name="fontSize" value={form.fontSize} min={10} max={40} onChange={handleChange} />
-                </div>
-                <button onClick={handleAddUnit} style={{background:'#2196f3',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',marginTop:12,cursor:'pointer'}}>
-                  إضافة الوحدة
-                </button>
+                <h4>إضافة وحدة جديدة (Firestore)</h4>
+                <form onSubmit={async e => {
+                  e.preventDefault();
+                  const title = (e.target as any).unitTitle.value;
+                  const type = (e.target as any).unitType.value;
+                  const details = (e.target as any).unitDetails.value;
+                  await addUnit({ title, type, details });
+                  alert('تم إضافة الوحدة بنجاح!');
+                  (e.target as any).reset();
+                }}>
+                  <input name="unitTitle" placeholder="اسم الوحدة" style={{margin:4,padding:8,borderRadius:8}} required />
+                  <input name="unitType" placeholder="نوع الوحدة" style={{margin:4,padding:8,borderRadius:8}} required />
+                  <input name="unitDetails" placeholder="تفاصيل" style={{margin:4,padding:8,borderRadius:8}} required />
+                  <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold',margin:4}}>إضافة وحدة</button>
+                </form>
               </div>
               <div style={{flex:2,minWidth:320}}>
                 <h4>الوحدات المضافة (تجريبي)</h4>
@@ -378,6 +347,21 @@ const AdminPanel: React.FC = () => {
         )}
         {tab==='المستخدمون' && (
           <div>
+            <h4>إضافة موظف جديد (Firestore)</h4>
+            <form onSubmit={async e => {
+              e.preventDefault();
+              const name = (e.target as any).empName.value;
+              const email = (e.target as any).empEmail.value;
+              const role = (e.target as any).empRole.value;
+              await addEmployee({ name, email, role });
+              alert('تم إضافة الموظف بنجاح!');
+              (e.target as any).reset();
+            }} style={{marginBottom:24}}>
+              <input name="empName" placeholder="اسم الموظف" style={{margin:4,padding:8,borderRadius:8}} required />
+              <input name="empEmail" placeholder="البريد الإلكتروني" style={{margin:4,padding:8,borderRadius:8}} required />
+              <input name="empRole" placeholder="الدور/الوظيفة" style={{margin:4,padding:8,borderRadius:8}} required />
+              <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold',margin:4}}>إضافة موظف</button>
+            </form>
             <h4>قائمة المستخدمين الجدد والمطورين</h4>
             <table style={{width:'100%',margin:'16px 0',borderCollapse:'collapse'}}>
               <thead>
