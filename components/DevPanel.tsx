@@ -7,10 +7,12 @@ const DevPanel: React.FC = () => {
   const [user, setUser] = useState<any>(null); // لاحقاً: بيانات المطور المسجل
 
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     const saved = localStorage.getItem('dev-units');
     if (saved) setUnits(JSON.parse(saved));
   }, []);
   useEffect(() => {
+    if (typeof window === 'undefined') return;
     localStorage.setItem('dev-units', JSON.stringify(units));
   }, [units]);
 

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 interface Review {
   name: string;
@@ -8,14 +8,19 @@ interface Review {
 }
 
 const Reviews: React.FC = () => {
-  const [reviews, setReviews] = useState<Review[]>(() => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('reviews');
-      return saved ? JSON.parse(saved) : [];
-    }
-    return [];
-  });
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [form, setForm] = useState({ name: '', rating: 5, comment: '' });
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const saved = localStorage.getItem('reviews');
+    if (saved) setReviews(JSON.parse(saved));
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem('reviews', JSON.stringify(reviews));
+  }, [reviews]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setForm(f => ({ ...f, [e.target.name]: e.target.value }));
@@ -28,7 +33,6 @@ const Reviews: React.FC = () => {
     const newReview = { ...form, date: new Date().toLocaleDateString() };
     const updated = [newReview, ...reviews];
     setReviews(updated);
-    localStorage.setItem('reviews', JSON.stringify(updated));
     setForm({ name: '', rating: 5, comment: '' });
   };
 
