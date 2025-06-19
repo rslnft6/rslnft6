@@ -1,6 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import dynamic from 'next/dynamic';
-import { ensureSuperAdminExists } from '../services/firestoreActions';
 
 const AdminPanel = dynamic(() => import('../components/AdminPanel'), { ssr: false });
 
@@ -12,11 +11,6 @@ export default function AdminPage() {
   const [pass, setPass] = useState('');
   const [error, setError] = useState('');
   const [logged, setLogged] = useState(false);
-
-  useEffect(() => {
-    // عند أول دخول للوحة التحكم، تأكد من وجود سوبر أدمن في قاعدة البيانات
-    ensureSuperAdminExists();
-  }, []);
 
   if (!logged) {
     return (
