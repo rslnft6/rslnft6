@@ -142,7 +142,7 @@ export default function Home() {
         <main>
           {/* شعار Realstatelive أعلى الصفحة */}
           <div style={{display:'flex',alignItems:'center',justifyContent:'center',margin:'32px 0 8px 0'}}>
-            <img src="/images/logo.png" alt="Realstatelive logo" style={{width:60,marginLeft:12}} />
+            <img src="/images/logo1.png" alt="Realstatelive logo" style={{width:60,marginLeft:12}} />
             <span style={{fontWeight:'bold',fontSize:36,color:'#00bcd4',letterSpacing:2,textShadow:'0 2px 8px #e0e0e0'}}>Realstatelive</span>
           </div>
           {/* شريط إعلانات متحرك (بديل marquee باستخدام CSS) */}
@@ -224,7 +224,7 @@ export default function Home() {
           <ImagesSlider />
           {/* الوحدات الأكثر مشاهدة بناءً على الفلترة */}
           <div style={{display:'flex',alignItems:'center',gap:8,margin:'24px 0 8px 0',justifyContent:'center'}}>
-            <img src="/images/logo.png" alt="logo" style={{width:36}} />
+            <img src="/images/logo1.png" alt="logo" style={{width:36}} />
             <span style={{color:'#ff9800',fontWeight:'bold',fontSize:22}}>الوحدات المقترحة لك</span>
             <span style={{background:'#00bcd4',color:'#fff',borderRadius:8,padding:'2px 10px',fontSize:14,marginRight:8}}>ذكاء اصطناعي</span>
           </div>

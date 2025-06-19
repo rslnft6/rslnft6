@@ -27,7 +27,7 @@ const MapView: React.FC<MapViewProps> = ({ properties }) => {
           p.type === 'clinic' ? '/images/clinic.jpg' :
           p.type === 'shop' ? '/images/shop.jpg' :
           p.type === 'office' ? '/images/office.jpg' :
-          '/images/logo.png';
+          '/images/logo1.png';
         const el = document.createElement('div');
         el.style.width = '44px';
         el.style.height = '44px';
