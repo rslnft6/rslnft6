@@ -4,7 +4,7 @@ import { developers } from '../data/developers';
 import { getAllProperties } from '../data/properties';
 import ExportCSV from './ExportCSV';
 import { FaHome, FaBuilding, FaUsers, FaBullhorn, FaCogs, FaUserTie } from 'react-icons/fa';
-import { addEmployee, addUnit } from '../services/firestoreActions';
+import { addEmployee, addUnit, addEmployeeWithAuth } from '../services/firestoreActions';
 
 const initialForm = {
   title: '',
@@ -347,20 +347,32 @@ const AdminPanel: React.FC = () => {
         )}
         {tab==='المستخدمون' && (
           <div>
-            <h4>إضافة موظف جديد (Firestore)</h4>
+            <h4>إضافة موظف جديد مع تفعيل الدخول (Firestore + Authentication)</h4>
             <form onSubmit={async e => {
               e.preventDefault();
               const name = (e.target as any).empName.value;
               const email = (e.target as any).empEmail.value;
+              const password = (e.target as any).empPassword.value;
               const role = (e.target as any).empRole.value;
-              await addEmployee({ name, email, role });
-              alert('تم إضافة الموظف بنجاح!');
-              (e.target as any).reset();
+              try {
+                await addEmployeeWithAuth({ name, email, password, role });
+                alert('تم إضافة الموظف وتفعيله بنجاح!');
+                (e.target as any).reset();
+              } catch (err: any) {
+                alert('حدث خطأ أثناء إضافة الموظف: '+(err?.message||''));
+              }
             }} style={{marginBottom:24}}>
               <input name="empName" placeholder="اسم الموظف" style={{margin:4,padding:8,borderRadius:8}} required />
               <input name="empEmail" placeholder="البريد الإلكتروني" style={{margin:4,padding:8,borderRadius:8}} required />
-              <input name="empRole" placeholder="الدور/الوظيفة" style={{margin:4,padding:8,borderRadius:8}} required />
-              <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold',margin:4}}>إضافة موظف</button>
+              <input name="empPassword" type="password" placeholder="كلمة المرور للموظف" style={{margin:4,padding:8,borderRadius:8}} required />
+              <select name="empRole" style={{margin:4,padding:8,borderRadius:8}} required>
+                <option value="موظف">موظف</option>
+                <option value="مدير">مدير</option>
+                <option value="مطور">مدير</option>
+                <option value="بروكر">بروكر</option>
+                <option value="تمويل">تمويل</option>
+              </select>
+              <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold',margin:4}}>إضافة موظف وتفعيل الدخول</button>
             </form>
             <h4>قائمة المستخدمين الجدد والمطورين</h4>
             <table style={{width:'100%',margin:'16px 0',borderCollapse:'collapse'}}>
