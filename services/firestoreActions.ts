@@ -3,6 +3,8 @@ import { auth } from '../data/firebase';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { getDocs, query, where } from 'firebase/firestore';
 
+console.log('=== firestoreActions.ts Loaded ===');
+
 // إضافة موظف جديد
 export async function addEmployee({ name, email, role }: { name: string, email: string, role: string }) {
   const db = getFirestore();

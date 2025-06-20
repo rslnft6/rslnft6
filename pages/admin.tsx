@@ -3,8 +3,9 @@ import dynamic from 'next/dynamic';
 import React from 'react';
 
 console.log('=== /pages/admin.tsx Mounted ===');
-
+console.log('=== admin.tsx: Start ===');
 const AdminPanel = dynamic(() => import('../components/AdminPanel'), { ssr: false });
+console.log('=== admin.tsx: After dynamic import ===');
 
 const ADMIN_USER = process.env.NEXT_PUBLIC_ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.NEXT_PUBLIC_ADMIN_MASTER_PASSWORD || '112233';

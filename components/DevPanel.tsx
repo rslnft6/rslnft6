@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+console.log('=== DevPanel.tsx Mounted ===');
 
 // لوحة تحكم المطورين: إضافة وحدات ومتابعة التسكين
 const DevPanel: React.FC = () => {
