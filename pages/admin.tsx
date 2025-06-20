@@ -2,6 +2,8 @@ import { useState } from 'react';
 import dynamic from 'next/dynamic';
 import React from 'react';
 
+console.log('=== /pages/admin.tsx Mounted ===');
+
 const AdminPanel = dynamic(() => import('../components/AdminPanel'), { ssr: false });
 
 const ADMIN_USER = process.env.NEXT_PUBLIC_ADMIN_USER || 'admin';

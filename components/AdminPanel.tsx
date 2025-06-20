@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+console.log('=== AdminPanel.tsx Mounted ===');
 import { compounds } from '../data/compounds';
 import { developers } from '../data/developers';
 import { getAllProperties } from '../data/properties';
