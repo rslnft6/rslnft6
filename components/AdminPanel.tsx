@@ -12,23 +12,35 @@ const TABS = [
   { key: 'الإعدادات', label: 'الإعدادات' },
 ];
 
+function usePersistedState<T>(key: string, initial: T) {
+  const [state, setState] = useState<T>(() => {
+    if (typeof window === 'undefined') return initial;
+    const saved = localStorage.getItem(key);
+    return saved ? JSON.parse(saved) : initial;
+  });
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    localStorage.setItem(key, JSON.stringify(state));
+  }, [state, key]);
+  return [state, setState] as const;
+}
+
 const AdminPanel: React.FC = () => {
-  // تبويب
   const [tab, setTab] = useState('الوحدات');
-  // وحدات وهمية
-  const [units, setUnits] = useState<any[]>([
+  // وحدات محفوظة
+  const [units, setUnits] = usePersistedState<any[]>('admin-units', [
     { id: 1, title: 'شقة فاخرة', type: 'شقة', details: '3 غرف وصالة' },
     { id: 2, title: 'فيلا راقية', type: 'فيلا', details: '5 غرف وحديقة' },
   ]);
   const [unitForm, setUnitForm] = useState({ title: '', type: '', details: '' });
-  // مطورين وهميين
-  const [devs, setDevs] = useState<any[]>([
+  // مطورين محفوظين
+  const [devs, setDevs] = usePersistedState<any[]>('admin-devs', [
     { id: 1, name: 'سوديك', country: 'مصر' },
     { id: 2, name: 'بالم هيلز', country: 'مصر' },
   ]);
   const [devForm, setDevForm] = useState({ name: '', country: '' });
-  // مستخدمين وهميين
-  const [users, setUsers] = useState<any[]>([
+  // مستخدمين محفوظين
+  const [users, setUsers] = usePersistedState<any[]>('admin-users', [
     { id: 1, name: 'أحمد', role: 'مدير' },
     { id: 2, name: 'منى', role: 'موظف' },
   ]);
