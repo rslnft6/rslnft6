@@ -1,6 +1,9 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import React from 'react';
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+import { db } from '../data/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const AdminPanel = dynamic(() => import('../components/AdminPanel'), { ssr: false });
 
@@ -12,33 +15,39 @@ export default function AdminPage() {
   const [debugStep, setDebugStep] = useState('بعد الاستيراد الديناميكي');
   const [currentUser, setCurrentUser] = useState<any>(null);
 
-  // جلب المستخدمين من localStorage
-  function getUsers() {
-    if (typeof window === 'undefined') return [];
+  // تسجيل الدخول عبر Firebase Auth ثم جلب بيانات المستخدم من Firestore
+  const handleLogin = async (e: any) => {
+    e.preventDefault();
+    setError('');
+    setDebugStep('جاري التحقق من بيانات الدخول...');
+    const auth = getAuth();
+    const email = user + '@app.local';
     try {
-      const users = localStorage.getItem('admin-users');
-      return users ? JSON.parse(users) : [];
-    } catch {
-      return [];
+      const cred = await signInWithEmailAndPassword(auth, email, pass);
+      // جلب بيانات المستخدم من Firestore
+      const q = query(collection(db, 'users'), where('uid', '==', cred.user.uid));
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        const userData = snap.docs[0].data();
+        setLogged(true);
+        setCurrentUser(userData);
+        setError('');
+        localStorage.setItem('admin-current-user', JSON.stringify(userData));
+        setDebugStep('تم تسجيل الدخول بنجاح');
+      } else {
+        setError('المستخدم غير موجود في قاعدة البيانات');
+        setDebugStep('فشل جلب بيانات المستخدم');
+      }
+    } catch (err: any) {
+      setError('اسم المستخدم أو كلمة المرور غير صحيحة');
+      setDebugStep('فشل تسجيل الدخول');
     }
-  }
+  };
 
   if (!logged) {
     return (
       <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#f5f7fa'}}>
-        <form onSubmit={e=>{
-          e.preventDefault();
-          const users = getUsers();
-          const found = users.find((u:any) => u.username === user && u.password === pass);
-          if(found) {
-            setLogged(true);
-            setCurrentUser(found);
-            setError('');
-            localStorage.setItem('admin-current-user', JSON.stringify(found));
-          } else {
-            setError('اسم المستخدم أو كلمة المرور غير صحيحة');
-          }
-        }} style={{background:'#fff',padding:32,borderRadius:16,boxShadow:'0 2px 16px #e0e0e0',minWidth:320}}>
+        <form onSubmit={handleLogin} style={{background:'#fff',padding:32,borderRadius:16,boxShadow:'0 2px 16px #e0e0e0',minWidth:320}}>
           <h2 style={{color:'#00bcd4',marginBottom:16}}>دخول لوحة التحكم</h2>
           <input type="text" placeholder="اسم الدخول" value={user} onChange={e=>setUser(e.target.value)} style={{width:'100%',padding:12,borderRadius:8,border:'1px solid #b6c6e6',marginBottom:12,fontSize:18}} required />
           <input type="password" placeholder="كلمة المرور" value={pass} onChange={e=>setPass(e.target.value)} style={{width:'100%',padding:12,borderRadius:8,border:'1px solid #b6c6e6',marginBottom:12,fontSize:18}} required />
