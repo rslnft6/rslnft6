@@ -1,10 +1,34 @@
 import { useState } from 'react';
 import dynamic from 'next/dynamic';
+import React from 'react';
 
 const AdminPanel = dynamic(() => import('../components/AdminPanel'), { ssr: false });
 
 const ADMIN_USER = process.env.NEXT_PUBLIC_ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.NEXT_PUBLIC_ADMIN_MASTER_PASSWORD || '112233';
+
+class ErrorBoundary extends React.Component<any, { hasError: boolean; error: any }> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error: any) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error: any, info: any) {
+    console.error('لوحة التحكم - خطأ:', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return <div style={{color:'#e53935',padding:40,fontSize:22}}>
+        <b>حدث خطأ في لوحة التحكم:</b>
+        <pre style={{direction:'ltr',background:'#fff0f0',padding:16,borderRadius:8,marginTop:16}}>{String(this.state.error)}</pre>
+        <div style={{marginTop:24,color:'#888'}}>يرجى مراجعة الكود أو التواصل مع الدعم الفني.</div>
+      </div>;
+    }
+    return this.props.children;
+  }
+}
 
 export default function AdminPage() {
   const [user, setUser] = useState('');
@@ -34,6 +58,9 @@ export default function AdminPage() {
     );
   }
 
-  // بعد تسجيل الدخول، أظهر لوحة التحكم الفعلية
-  return <div style={{padding:40,maxWidth:1100,margin:'auto'}}><AdminPanel /></div>;
+  return <div style={{padding:40,maxWidth:1100,margin:'auto'}}>
+    <ErrorBoundary>
+      <AdminPanel />
+    </ErrorBoundary>
+  </div>;
 }
