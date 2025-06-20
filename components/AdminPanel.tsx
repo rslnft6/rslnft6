@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 console.log('=== AdminPanel.tsx Mounted ===');
+let debugStep = 'AdminPanel mounted';
 import { compounds } from '../data/compounds';
 import { developers } from '../data/developers';
 import { getAllProperties } from '../data/properties';
@@ -217,6 +218,9 @@ const AdminPanel: React.FC = () => {
         )}
         {/* باقي الأقسام: الكمباوندات، الإعلانات، الإعدادات... */}
         {tab!=='الوحدات' && tab!=='المستخدمون' && tab!=='المطورين' && <div style={{color:'#888',fontSize:18}}>سيتم تفعيل هذا القسم قريبًا...</div>}
+      </div>
+      <div>
+        <div style={{color:'#888',marginBottom:8}}>Debug: {debugStep}</div>
       </div>
     </div>
   );
