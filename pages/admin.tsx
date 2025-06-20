@@ -1,14 +1,8 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
+import React from 'react';
 
-let debugStep = 'start';
-
-const AdminPanel = dynamic(() => {
-  debugStep = 'dynamic import';
-  return import('../components/AdminPanel');
-}, { ssr: false });
-
-debugStep = 'after dynamic import';
+const AdminPanel = dynamic(() => import('../components/AdminPanel'), { ssr: false });
 
 const ADMIN_USER = process.env.NEXT_PUBLIC_ADMIN_USER || 'admin';
 const ADMIN_PASS = process.env.NEXT_PUBLIC_ADMIN_MASTER_PASSWORD || '112233';
@@ -18,6 +12,7 @@ export default function AdminPage() {
   const [pass, setPass] = useState('');
   const [error, setError] = useState('');
   const [logged, setLogged] = useState(false);
+  const [debugStep, setDebugStep] = useState('بعد الاستيراد الديناميكي');
 
   if (!logged) {
     return (
@@ -52,7 +47,6 @@ export default function AdminPage() {
 }
 
 // Error Boundary لعرض أي خطأ بدلاً من الشاشة السوداء
-import React from 'react';
 class ErrorBoundary extends React.Component<any, { hasError: boolean; error: any }> {
   constructor(props: any) {
     super(props);
