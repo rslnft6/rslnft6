@@ -47,6 +47,20 @@ export default function AdminPage() {
   };
 
   if (!logged) {
+    // دالة اختبار الاتصال بـ Firebase
+    const testFirebase = async () => {
+      setDebugStep('جارٍ اختبار الاتصال بـ Firebase...');
+      try {
+        // محاولة جلب أي بيانات من قاعدة users
+        const snap = await getDocs(collection(db, 'users'));
+        if (snap.size >= 0) {
+          setDebugStep('✅ الاتصال بـ Firebase ناجح. عدد المستخدمين: ' + snap.size);
+        }
+      } catch (err: any) {
+        setDebugStep('❌ فشل الاتصال بـ Firebase: ' + (err.message || String(err)));
+      }
+    };
+
     return (
       <div style={{minHeight:'100vh',display:'flex',alignItems:'center',justifyContent:'center',background:'#f5f7fa'}}>
         <form onSubmit={handleLogin} style={{background:'#fff',padding:32,borderRadius:16,boxShadow:'0 2px 16px #e0e0e0',minWidth:320}}>
@@ -54,6 +68,7 @@ export default function AdminPage() {
           <input type="text" placeholder="اسم الدخول" value={user} onChange={e=>setUser(e.target.value)} style={{width:'100%',padding:12,borderRadius:8,border:'1px solid #b6c6e6',marginBottom:12,fontSize:18}} required />
           <input type="password" placeholder="كلمة المرور" value={pass} onChange={e=>setPass(e.target.value)} style={{width:'100%',padding:12,borderRadius:8,border:'1px solid #b6c6e6',marginBottom:12,fontSize:18}} required />
           <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 24px',fontWeight:'bold',fontSize:18,width:'100%'}}>دخول</button>
+          <button type="button" onClick={testFirebase} style={{background:'#eee',color:'#00bcd4',border:'none',borderRadius:8,padding:'8px 16px',fontWeight:'bold',fontSize:16,marginTop:8,marginBottom:8,width:'100%'}}>اختبار الاتصال بـ Firebase</button>
           {error && <div style={{color:'#e53935',marginTop:12,fontWeight:'bold'}}>{error}</div>}
           <div style={{marginTop:16,color:'#888'}}>Debug: {debugStep}</div>
         </form>
