@@ -87,6 +87,11 @@ export default function Home() {
     setFiltered(smartSearch(q, properties));
   };
 
+  // البحث الصوتي: عند النتيجة يتم البحث الذكي مباشرة
+  const handleVoiceSearch = (text: string) => {
+    handleSmartSearch(text);
+  };
+
   // تحديث الفلاتر المؤقتة
   const handleFilterChange = (key: string, value: string) => {
     setPendingFilters(f => ({ ...f, [key]: value }));
@@ -263,7 +268,7 @@ export default function Home() {
           `}</style>
           {/* الفلاتر */}
           <div className="search-bar" style={{background:'#fff',borderRadius:16,padding:16,boxShadow:'0 2px 12px #e0e0e0',marginBottom:24,flexWrap:'wrap',display:'flex',gap:8}}>
-            <VoiceSearch onResult={text => handleFilterChange('search', text)} />
+            <VoiceSearch onResult={handleVoiceSearch} />
             <input placeholder="بحث عن وحدة..." value={pendingFilters.search} onChange={e => handleFilterChange('search', e.target.value)} style={{fontSize:18,border:'1px solid #00bcd4',borderRadius:8,padding:8,marginLeft:8,minWidth:160,flex:'1 1 120px'}} />
             <select value={pendingFilters.type} onChange={e => handleFilterChange('type', e.target.value)} style={{color:'#00bcd4',fontWeight:'bold',marginLeft:8,minWidth:120,flex:'1 1 120px'}}>
               <option value="">الكل</option>
@@ -394,61 +399,27 @@ export default function Home() {
         </main>
       </div>
       <footer style={{background:'#f5f7fa',color:'#222',padding:'32px 0 16px 0',marginTop:40}}>
-  <div className="footer" style={{display:'flex',justifyContent:'center',gap:24,flexWrap:'wrap',alignItems:'center'}}>
-    <button onClick={()=>window.location.href='/admin'} style={{background:'#ff9800',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:'bold',fontSize:18,cursor:'pointer',marginBottom:8}}>لوحة التحكم</button>
-    <button onClick={()=>window.location.href='/partners'} style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:'bold',fontSize:18,cursor:'pointer',marginBottom:8}}>شركاؤنا</button>
-    <button onClick={()=>window.location.href='/about'} style={{background:'#00e676',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:'bold',fontSize:18,cursor:'pointer',marginBottom:8}}>من نحن</button>
-    <button onClick={()=>window.location.href='/login'} style={{background:'#2196f3',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:'bold',fontSize:18,cursor:'pointer',marginBottom:8}}>تسجيل الدخول</button>
-    <button onClick={()=>window.location.href='/dev-panel'} style={{background:'#673ab7',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:'bold',fontSize:18,cursor:'pointer',marginBottom:8}}>لوحة تحكم المطورين</button>
-  </div>
-  <div style={{textAlign:'center',marginTop:24,color:'#00bcd4',fontSize:16,fontWeight:'bold'}}>
-    <img src="/globe.svg" alt="logo" style={{width:32,verticalAlign:'middle',marginRight:8}} />
-    جميع الحقوق محفوظة The team one world criptoman © {new Date().getFullYear()}
-  </div>
-  {/* معرض صور بانوراما تجريبي */}
-  {/*
-  <div style={{textAlign:'center',marginBottom:24}}>
-    <div style={{fontWeight:'bold',fontSize:20,color:'#00bcd4',marginBottom:8}}>معرض بانوراما تجريبي</div>
-    <div style={{display:'flex',justifyContent:'center',gap:16,flexWrap:'wrap'}}>
-      {PANORAMA_IMAGES.map((src,i) => (
-        <img
-          key={i}
-          src={src}
-          alt={`بانوراما ${i+1}`}
-          style={{width:120,height:60,objectFit:'cover',borderRadius:12,cursor:'pointer',boxShadow:'0 2px 8px #e0e0e0'}}
-          onClick={()=>setShowPano(src)}
-        />
-      ))}
-    </div>
-    {showPano && (
-      <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.85)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setShowPano(null)}>
-        <div style={{position:'relative',background:'#222',borderRadius:16,padding:16}} onClick={e=>e.stopPropagation()}>
-          <VRView src={showPano} />
-          <button onClick={()=>setShowPano(null)} style={{position:'absolute',top:8,right:8,background:'#e53935',color:'#fff',border:'none',borderRadius:8,padding:'4px 16px',fontWeight:'bold',fontSize:18,cursor:'pointer'}}>إغلاق</button>
-        </div>
-      </div>
-    )}
-  </div>
-  */}
-  <div style={{
+    <div style={{
       background: 'linear-gradient(90deg,#00bcd4 0%,#2196f3 100%)',
       color: '#fff',
       borderRadius: 16,
-      padding: '24px 32px',
-      margin: '32px auto 0 auto',
-      maxWidth: 700,
+      padding: '32px 32px',
+      margin: '0 auto',
+      maxWidth: 800,
       boxShadow: '0 2px 16px #b2ebf2',
       fontWeight: 'bold',
       fontSize: 20,
       textAlign: 'center',
       letterSpacing: 1
     }}>
-      <button onClick={()=>window.location.href='/about'} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'12px 32px',fontWeight:'bold',fontSize:22,cursor:'pointer',marginBottom:16}}>من نحن</button>
-      <div style={{fontSize:16,fontWeight:'normal',color:'#fff',marginBottom:0,marginTop:0}}>
-        نحن فريق Realstatelive نؤمن بأن العقار هو استثمار المستقبل، ونعمل على تقديم تجربة رقمية متكاملة تجمع بين أحدث التقنيات (الذكاء الاصطناعي، الواقع الافتراضي، الخرائط الذكية) لتسهيل البحث، المقارنة، واتخاذ القرار العقاري بثقة وشفافية. هدفنا أن نكون المنصة العقارية الأكثر ابتكاراً وموثوقية في العالم العربي، بخدمة احترافية ودعم حقيقي لكل عميل ومطور.
+      <button onClick={()=>window.location.href='/about'} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'14px 36px',fontWeight:'bold',fontSize:24,cursor:'pointer',marginBottom:18}}>من نحن</button>
+      <div style={{fontSize:17,fontWeight:'normal',color:'#fff',margin:'16px 0 0 0',lineHeight:1.9}}>
+        نحن منصة <span style={{color:'#ffeb3b'}}>Realstatelive</span> الرقمية العقارية الرائدة في الشرق الأوسط، نقدم حلولاً متكاملة تجمع بين الذكاء الاصطناعي، الواقع الافتراضي، الخرائط الذكية، البحث الصوتي، الدردشة الذكية، تصفح ثلاثي الأبعاد، وتكامل مع أحدث تقنيات البلوكتشين.<br/><br/>
+        قريبًا: سنطلق أول منصة <b>NFTs</b> عقارية في المنطقة، لربط العقارات في الإمارات والبحرين بالأصول الرقمية، مع إمكانية الدفع بمحافظ البلوكتشين والتعامل الكامل عبر تقنيات Web3.<br/><br/>
+        هدفنا أن نكون الخيار الأول لكل من يبحث عن الابتكار والشفافية في السوق العقاري، ونمنحك تجربة عالمية بمعايير شركات التكنولوجيا الكبرى.
       </div>
-      <div style={{marginTop:24}}>
-        <button onClick={()=>setShowContacts(!showContacts)} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'12px 32px',fontWeight:'bold',fontSize:20,cursor:'pointer'}}>تواصل معنا</button>
+      <div style={{marginTop:28}}>
+        <button onClick={()=>setShowContacts(!showContacts)} style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:'bold',fontSize:18,cursor:'pointer',marginBottom:8}}>تواصل معنا</button>
         {showContacts && (
           <div style={{marginTop:16,display:'flex',flexWrap:'wrap',justifyContent:'center',gap:18}}>
             <a href={`https://wa.me/${contacts.whatsapp}`} target="_blank" rel="noopener noreferrer" style={{color:'#25d366',fontSize:28}} title="واتساب"><FaWhatsapp /></a>
@@ -463,11 +434,15 @@ export default function Home() {
           </div>
         )}
       </div>
-      <div style={{marginTop:12,fontSize:16,color:'#fff',fontWeight:'normal'}}>
+      <div style={{marginTop:18,fontSize:15,color:'#fff',fontWeight:'normal'}}>
         للتواصل السريع: <a href={`tel:${contacts.phone}`} style={{color:'#ffeb3b',textDecoration:'underline'}}>{contacts.phone}</a> أو واتساب: <a href={`https://wa.me/${contacts.whatsapp}`} style={{color:'#25d366',textDecoration:'underline'}}>{contacts.whatsapp}</a>
       </div>
     </div>
-</footer>
+    <div style={{textAlign:'center',marginTop:24,color:'#00bcd4',fontSize:16,fontWeight:'bold'}}>
+      <img src="/globe.svg" alt="logo" style={{width:32,verticalAlign:'middle',marginRight:8}} />
+      جميع الحقوق محفوظة Realstatelive © {new Date().getFullYear()}
+    </div>
+  </footer>
     </div>
   );
 }
