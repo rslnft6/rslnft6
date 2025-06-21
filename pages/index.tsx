@@ -22,6 +22,8 @@ import StatsBox from '../components/StatsBox';
 import AnimatedBackground from '../components/AnimatedBackground';
 import ImagesSlider from '../components/ImagesSlider';
 import SmartChat from '../components/SmartChat';
+import { db } from '../data/firebase';
+import { collection, getDocs } from 'firebase/firestore';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -65,6 +67,7 @@ export default function Home() {
     search: '', type: '', country: '', compound: '', developer: '', finance: '', purpose: ''
   });
   const [chatOpen, setChatOpen] = useState(false);
+  const [firebaseUnits, setFirebaseUnits] = useState<any[]>([]);
 
   // البحث الذكي
   const handleSmartSearch = (q: string) => {
@@ -88,13 +91,23 @@ export default function Home() {
     setPurpose(pendingFilters.purpose);
   };
 
-  // فلترة الوحدات حسب البحث
-  const filteredProperties = properties.filter(p =>
+  // جلب الوحدات من Firestore
+  useEffect(() => {
+    async function fetchUnits() {
+      const snap = await getDocs(collection(db, 'units'));
+      setFirebaseUnits(snap.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    }
+    fetchUnits();
+  }, []);
+
+  // دمج وحدات فايرستور مع الوحدات المحلية
+  const allProperties = [...firebaseUnits, ...properties];
+  const filteredProperties = allProperties.filter(p =>
     (!search || (p.title && p.title.includes(search)) || (p.location && p.location.includes(search))) &&
     (!type || p.type === type) &&
     (!country || (p.location && p.location.includes(country))) &&
     (!compound || p.compound === compound) &&
-    (!developer || p.developer === developer) &&
+    (!developer || p.developer === developer || p.developerId === developer) &&
     (!finance || (finance === 'تمويل عقاري' ? p.finance === 'تمويل عقاري' : true)) &&
     (!purpose || p.purpose === purpose) // تحديث الفلترة لتشمل الغرض
   );

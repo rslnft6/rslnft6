@@ -49,7 +49,29 @@ const AdminPanel: React.FC = () => {
 
   // وحدات Firestore
   const [units, setUnits] = useState<any[]>([]);
-  const [unitForm, setUnitForm] = useState({ title: '', type: '', details: '' });
+  const [unitForm, setUnitForm] = useState<{
+    title: string;
+    type: string;
+    details: string;
+    area: string;
+    rooms: string;
+    bathrooms: string;
+    kitchens: string;
+    hasGarden: boolean;
+    hasPool: boolean;
+    phone: string;
+    whatsapp: string;
+    lat: string;
+    lng: string;
+    images: File[];
+    vrUrl: string;
+    panoramaUrl: string;
+    model3dUrl: string;
+    developerId: string;
+    compound: string;
+  }>({
+    title: '', type: '', details: '', area: '', rooms: '', bathrooms: '', kitchens: '', hasGarden: false, hasPool: false, phone: '', whatsapp: '', lat: '', lng: '', images: [], vrUrl: '', panoramaUrl: '', model3dUrl: '', developerId: '', compound: ''
+  });
   // مطورين Firestore
   const [devs, setDevs] = useState<any[]>([]);
   const [devForm, setDevForm] = useState({ name: '', country: '' });
@@ -89,8 +111,41 @@ const AdminPanel: React.FC = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      await addDoc(collection(db, 'units'), unitForm);
-      setUnitForm({ title: '', type: '', details: '' });
+      // رفع الصور إلى Firebase Storage إذا تم اختيارها
+      let imageUrls: string[] = [];
+      if (unitForm.images && unitForm.images.length > 0) {
+        const storageRef = (await import('firebase/storage')).ref;
+        const { getStorage, uploadBytes, getDownloadURL } = await import('firebase/storage');
+        const storage = getStorage();
+        for (const img of unitForm.images) {
+          const imgRef = storageRef(storage, `units/${Date.now()}_${img.name}`);
+          await uploadBytes(imgRef, img);
+          const url = await getDownloadURL(imgRef);
+          imageUrls.push(url);
+        }
+      }
+      await addDoc(collection(db, 'units'), {
+        ...unitForm,
+        images: imageUrls,
+        developerId: unitForm.developerId,
+        compound: unitForm.compound,
+        area: unitForm.area,
+        rooms: unitForm.rooms,
+        bathrooms: unitForm.bathrooms,
+        kitchens: unitForm.kitchens,
+        hasGarden: unitForm.hasGarden,
+        hasPool: unitForm.hasPool,
+        phone: unitForm.phone,
+        whatsapp: unitForm.whatsapp,
+        lat: unitForm.lat,
+        lng: unitForm.lng,
+        vrUrl: unitForm.vrUrl,
+        panoramaUrl: unitForm.panoramaUrl,
+        model3dUrl: unitForm.model3dUrl
+      });
+      setUnitForm({
+        title: '', type: '', details: '', area: '', rooms: '', bathrooms: '', kitchens: '', hasGarden: false, hasPool: false, phone: '', whatsapp: '', lat: '', lng: '', images: [], vrUrl: '', panoramaUrl: '', model3dUrl: '', developerId: '', compound: ''
+      });
       setSuccess('تمت إضافة الوحدة بنجاح!');
       setError(null);
     } catch (err: any) {
@@ -225,18 +280,50 @@ const AdminPanel: React.FC = () => {
         {/* الوحدات */}
         {tab==='الوحدات' && allowedTabs.includes('الوحدات') && (
           <div>
-            <form onSubmit={handleAddUnit} style={{marginBottom:24}}>
+            <form onSubmit={handleAddUnit} style={{marginBottom:24,display:'flex',flexWrap:'wrap',gap:8}}>
               <input value={unitForm.title} onChange={e=>setUnitForm(f=>({...f,title:e.target.value}))} placeholder="اسم الوحدة" style={{margin:4,padding:8,borderRadius:8}} required />
               <input value={unitForm.type} onChange={e=>setUnitForm(f=>({...f,type:e.target.value}))} placeholder="نوع الوحدة" style={{margin:4,padding:8,borderRadius:8}} required />
               <input value={unitForm.details} onChange={e=>setUnitForm(f=>({...f,details:e.target.value}))} placeholder="تفاصيل" style={{margin:4,padding:8,borderRadius:8}} required />
+              <input value={unitForm.area} onChange={e=>setUnitForm(f=>({...f,area:e.target.value}))} placeholder="المساحة (م²)" style={{margin:4,padding:8,borderRadius:8}} required />
+              <input value={unitForm.rooms} onChange={e=>setUnitForm(f=>({...f,rooms:e.target.value}))} placeholder="عدد الغرف" style={{margin:4,padding:8,borderRadius:8}} required />
+              <input value={unitForm.bathrooms} onChange={e=>setUnitForm(f=>({...f,bathrooms:e.target.value}))} placeholder="عدد الحمامات" style={{margin:4,padding:8,borderRadius:8}} required />
+              <input value={unitForm.kitchens} onChange={e=>setUnitForm(f=>({...f,kitchens:e.target.value}))} placeholder="عدد المطابخ" style={{margin:4,padding:8,borderRadius:8}} />
+              <label style={{margin:4}}><input type="checkbox" checked={unitForm.hasGarden} onChange={e=>setUnitForm(f=>({...f,hasGarden:e.target.checked}))}/> حديقة</label>
+              <label style={{margin:4}}><input type="checkbox" checked={unitForm.hasPool} onChange={e=>setUnitForm(f=>({...f,hasPool:e.target.checked}))}/> حمام سباحة</label>
+              <input value={unitForm.phone} onChange={e=>setUnitForm(f=>({...f,phone:e.target.value}))} placeholder="رقم الاتصال" style={{margin:4,padding:8,borderRadius:8}} />
+              <input value={unitForm.whatsapp} onChange={e=>setUnitForm(f=>({...f,whatsapp:e.target.value}))} placeholder="رقم واتساب" style={{margin:4,padding:8,borderRadius:8}} />
+              <input value={unitForm.lat} onChange={e=>setUnitForm(f=>({...f,lat:e.target.value}))} placeholder="خط العرض (lat)" style={{margin:4,padding:8,borderRadius:8}} />
+              <input value={unitForm.lng} onChange={e=>setUnitForm(f=>({...f,lng:e.target.value}))} placeholder="خط الطول (lng)" style={{margin:4,padding:8,borderRadius:8}} />
+              <input type="file" multiple accept="image/*" onChange={e=>setUnitForm(f=>({...f,images:Array.from(e.target.files||[])}))} style={{margin:4}} />
+              <input value={unitForm.vrUrl} onChange={e=>setUnitForm(f=>({...f,vrUrl:e.target.value}))} placeholder="رابط VR أو 3D" style={{margin:4,padding:8,borderRadius:8}} />
+              <input value={unitForm.panoramaUrl} onChange={e=>setUnitForm(f=>({...f,panoramaUrl:e.target.value}))} placeholder="رابط صورة بانوراما" style={{margin:4,padding:8,borderRadius:8}} />
+              <input value={unitForm.model3dUrl} onChange={e=>setUnitForm(f=>({...f,model3dUrl:e.target.value}))} placeholder="رابط نموذج 3D" style={{margin:4,padding:8,borderRadius:8}} />
+              <select value={unitForm.developerId} onChange={e=>setUnitForm(f=>({...f,developerId:e.target.value}))} style={{margin:4,padding:8,borderRadius:8}} required>
+                <option value="">اختر المطور</option>
+                {devs.map((d:any)=>(<option key={d.id} value={d.id}>{d.name}</option>))}
+              </select>
+              <input value={unitForm.compound} onChange={e=>setUnitForm(f=>({...f,compound:e.target.value}))} placeholder="اسم الكمبوند (اختياري)" style={{margin:4,padding:8,borderRadius:8}} />
               <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold',margin:4}} disabled={loading}>إضافة وحدة</button>
             </form>
+            {/* عرض الوحدات */}
             <div style={{display:'flex',flexWrap:'wrap',gap:16}}>
               {units.map((u,i)=>(
                 <div key={u.id} style={{border:'1px solid #eee',borderRadius:12,padding:12,minWidth:220,maxWidth:260,position:'relative'}}>
                   <b>{u.title}</b>
                   <div>النوع: {u.type}</div>
-                  <div>تفاصيل: {u.details}</div>
+                  <div>المساحة: {u.area} م²</div>
+                  <div>الغرف: {u.rooms}</div>
+                  <div>الحمامات: {u.bathrooms}</div>
+                  <div>المطابخ: {u.kitchens}</div>
+                  <div>حديقة: {u.hasGarden?'نعم':'لا'} | حمام سباحة: {u.hasPool?'نعم':'لا'}</div>
+                  <div>اتصال: {u.phone} | واتساب: {u.whatsapp}</div>
+                  <div>الموقع: {u.lat && u.lng ? `${u.lat}, ${u.lng}` : '---'}</div>
+                  <div>المطور: {devs.find(d=>d.id===u.developerId)?.name||'---'}</div>
+                  <div>الكمبوند: {u.compound||'---'}</div>
+                  {u.images && u.images.length>0 && <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{u.images.map((img:string,idx:number)=>(<img key={idx} src={img} alt="img" style={{width:48,height:48,borderRadius:6,objectFit:'cover'}}/>))}</div>}
+                  {u.vrUrl && <div><a href={u.vrUrl} target="_blank" rel="noopener noreferrer">VR/3D</a></div>}
+                  {u.panoramaUrl && <div><a href={u.panoramaUrl} target="_blank" rel="noopener noreferrer">بانوراما</a></div>}
+                  {u.model3dUrl && <div><a href={u.model3dUrl} target="_blank" rel="noopener noreferrer">نموذج 3D</a></div>}
                   <button onClick={()=>handleDeleteUnit(u.id)} style={{position:'absolute',top:8,left:8,background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'2px 10px',fontWeight:'bold',cursor:'pointer'}}>حذف</button>
                 </div>
               ))}
