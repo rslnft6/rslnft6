@@ -164,6 +164,40 @@ export default function Home() {
     fetchContacts();
   }, []);
 
+  // جلب إعدادات الشريط المتحرك من فايرستور
+  const [marquee, setMarquee] = useState({ texts: ["فرحنا بوجودك معنا!"], speed: 30, color: "#ff9800", fontSize: 20 });
+  useEffect(() => {
+    async function fetchMarquee() {
+      try {
+        const ref = fsDoc(db, 'settings', 'marquee');
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const d = snap.data();
+          setMarquee({
+            texts: d.texts || ["فرحنا بوجودك معنا!"],
+            speed: d.speed || 30,
+            color: d.color || "#ff9800",
+            fontSize: d.fontSize || 20
+          });
+        }
+      } catch {}
+    }
+    fetchMarquee();
+  }, []);
+
+  // جلب صور السلايدر من فايرستور
+  const [sliderImages, setSliderImages] = useState<string[]>([]);
+  useEffect(() => {
+    async function fetchSlider() {
+      try {
+        const ref = fsDoc(db, 'settings', 'slider');
+        const snap = await getDoc(ref);
+        if (snap.exists()) setSliderImages(snap.data().images || []);
+      } catch {}
+    }
+    fetchSlider();
+  }, []);
+
   return (
     <div className="container" style={{
       minHeight: '100vh',
@@ -241,26 +275,21 @@ export default function Home() {
             <img src="/images/logo1.png" alt="Realstatelive logo" style={{width:60,marginLeft:12}} />
             <span style={{fontWeight:'bold',fontSize:36,color:'#00bcd4',letterSpacing:2,textShadow:'0 2px 8px #e0e0e0'}}>Realstatelive</span>
           </div>
-          {/* شريط إعلانات متحرك بلغات متعددة */}
+          {/* شريط إعلانات متحرك ديناميكي */}
           <div style={{width:'100%',overflow:'hidden',margin:'0 auto 16px auto',direction:'rtl'}}>
             <div style={{
               display:'inline-block',
               whiteSpace:'nowrap',
-              animation:'marquee 30s linear infinite',
-              color:'#ff9800',
+              animation:`marquee ${marquee.speed}s linear infinite`,
+              color:marquee.color,
               fontWeight:'bold',
-              fontSize:20,
+              fontSize:marquee.fontSize,
               padding:'8px 0',
               minWidth:'100%'
             }}>
-              <span style={{marginRight:40}}>فرحنا بوجودك معنا!</span>
-              <span style={{marginRight:40}}>We are happy to have you!</span>
-              <span style={{marginRight:40}}>Nous sommes ravis de vous accueillir!</span>
-              <span style={{marginRight:40}}>¡Nos alegra tenerte con nosotros!</span>
-              <span style={{marginRight:40}}>سعيدين بلقائك!</span>
-              <span style={{marginRight:40}}>Happy to see you!</span>
-              <span style={{marginRight:40}}>Heureux de vous voir!</span>
-              <span style={{marginRight:40}}>¡Feliz de verte!</span>
+              {marquee.texts.map((txt,i)=>(
+                <span key={i} style={{marginRight:40}}>{txt}</span>
+              ))}
             </div>
           </div>
           <style>{`
@@ -323,7 +352,7 @@ export default function Home() {
             </select>
             <button onClick={applyFilters} style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:'bold',fontSize:16,marginLeft:8,cursor:'pointer'}}>بحث</button>
           </div>
-          {/* سلايدر صور متحرك بالعرض */}
+          {/* سلايدر صور متحرك ديناميكي */}
           <div style={{width:'100%',overflow:'hidden',margin:'0 auto 24px auto',direction:'ltr'}}>
             <div style={{
               display:'flex',
@@ -332,13 +361,17 @@ export default function Home() {
               alignItems:'center',
               minWidth:'100%'
             }}>
-              <img src="/images/bg1.png" alt="bg1" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
-              <img src="/images/bg2.png" alt="bg2" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
-              <img src="/images/bg10.jpg" alt="bg10" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
-              {/* تكرار الصور لعمل حلقة مستمرة */}
-              <img src="/images/bg1.png" alt="bg1-2" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
-              <img src="/images/bg2.png" alt="bg2-2" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
-              <img src="/images/bg10.jpg" alt="bg10-2" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
+              {sliderImages.length === 0 ? (
+                <>
+                  <img src="/images/bg1.png" alt="bg1" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
+                  <img src="/images/bg2.png" alt="bg2" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
+                  <img src="/images/bg10.jpg" alt="bg10" style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
+                </>
+              ) : (
+                sliderImages.concat(sliderImages).map((img,i)=>(
+                  <img key={i} src={img} alt={`slider${i}`} style={{height:120,borderRadius:16,boxShadow:'0 2px 8px #e0e0e0'}} />
+                ))
+              )}
             </div>
           </div>
           <style>{`
@@ -416,18 +449,12 @@ export default function Home() {
     letterSpacing: 1
   }}>
     <div style={{display:'flex',justifyContent:'center',gap:16,marginBottom:18,flexWrap:'wrap'}}>
-      <button onClick={()=>setShowAbout(!showAbout)} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'14px 36px',fontWeight:'bold',fontSize:20,cursor:'pointer'}}>من نحن</button>
+      <button onClick={()=>window.location.href='/about'} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'14px 36px',fontWeight:'bold',fontSize:20,cursor:'pointer'}}>من نحن</button>
       <button onClick={()=>setShowContacts(!showContacts)} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'14px 36px',fontWeight:'bold',fontSize:20,cursor:'pointer'}}>تواصل معنا</button>
       <button onClick={()=>window.location.href='/partners'} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'14px 36px',fontWeight:'bold',fontSize:20,cursor:'pointer'}}>شركاؤنا</button>
     </div>
     {/* نبذة من نحن */}
-    {showAbout && (
-      <div style={{margin:'16px auto',background:'#fff',color:'#00bcd4',borderRadius:12,padding:'18px 16px',maxWidth:600,fontSize:18,fontWeight:'normal',boxShadow:'0 2px 8px #b2ebf2'}}>
-        نحن منصة <span style={{color:'#ffeb3b'}}>Realstatelive</span> الرقمية العقارية الرائدة في الشرق الأوسط، نقدم حلولاً متكاملة تجمع بين الذكاء الاصطناعي، الواقع الافتراضي، الخرائط الذكية، البحث الصوتي، الدردشة الذكية، تصفح ثلاثي الأبعاد، وتكامل مع أحدث تقنيات البلوكتشين.<br/><br/>
-        قريبًا: سنطلق أول منصة <b>NFTs</b> عقارية في المنطقة، لربط العقارات في الإمارات والبحرين بالأصول الرقمية، مع إمكانية الدفع بمحافظ البلوكتشين والتعامل الكامل عبر تقنيات Web3.<br/><br/>
-        هدفنا أن نكون الخيار الأول لكل من يبحث عن الابتكار والشفافية في السوق العقاري، ونمنحك تجربة عالمية بمعايير شركات التكنولوجيا الكبرى.
-      </div>
-    )}
+    {/* تم إلغاء عرض النبذة هنا بناءً على طلب المستخدم */}
     {/* أيقونات التواصل */}
     {showContacts && (
       <div style={{marginTop:16,display:'flex',flexWrap:'wrap',justifyContent:'center',gap:18}}>
@@ -443,7 +470,7 @@ export default function Home() {
       </div>
     )}
     <div style={{marginTop:18,fontSize:15,color:'#fff',fontWeight:'normal'}}>
-      للتواصل السريع: <a href={`tel:${contacts.phone}`} style={{color:'#ffeb3b',textDecoration:'underline'}}>{contacts.phone}</a> أو واتساب: <a href={`https://wa.me/${contacts.whatsapp}`} style={{color:'#25d366',textDecoration:'underline'}}>{contacts.whatsapp}</a>
+      الخط الساخن <span style={{color:'#ffeb3b',textDecoration:'underline',fontWeight:'bold'}}>19500</span>
     </div>
   </div>
   <div style={{textAlign:'center',marginTop:24,color:'#00bcd4',fontSize:16,fontWeight:'bold'}}>

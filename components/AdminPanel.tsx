@@ -15,6 +15,8 @@ const TABS = [
   { key: 'المستخدمون', label: 'المستخدمون' },
   { key: 'الإعلانات', label: 'الإعلانات' },
   { key: 'الإعدادات', label: 'الإعدادات' },
+  { key: 'من نحن', label: 'من نحن' },
+  { key: 'الشركاء', label: 'الشركاء' },
 ];
 
 function usePersistedState<T>(key: string, initial: T) {
@@ -84,6 +86,25 @@ const AdminPanel: React.FC = () => {
   // بيانات التواصل
   const [contacts, setContacts] = useState<ContactLinks>(defaultContacts);
   const [contactsLoading, setContactsLoading] = useState(false);
+  // --- من نحن ---
+  const [aboutText, setAboutText] = useState('');
+  const [aboutLoading, setAboutLoading] = useState(false);
+  // --- الشركاء ---
+  const [partners, setPartners] = useState<any[]>([]);
+  const [partnerForm, setPartnerForm] = useState({ name: '', url: '', image: '' });
+  const [partnerImageFile, setPartnerImageFile] = useState<File|null>(null);
+  const [partnersLoading, setPartnersLoading] = useState(false);
+  // --- إعدادات الشريط المتحرك ---
+  const [marquee, setMarquee] = useState({ texts: ["فرحنا بوجودك معنا!"], speed: 30, color: "#ff9800", fontSize: 20 });
+  const [marqueeLoading, setMarqueeLoading] = useState(false);
+  // --- سلايدر الصور ---
+  const [sliderImages, setSliderImages] = useState<string[]>([]);
+  const [sliderLoading, setSliderLoading] = useState(false);
+  const [sliderFiles, setSliderFiles] = useState<File[]>([]);
+  // --- صور من نحن ---
+  const [aboutImages, setAboutImages] = useState<string[]>([]);
+  const [aboutImageFiles, setAboutImageFiles] = useState<File[]>([]);
+  const [aboutImagesLoading, setAboutImagesLoading] = useState(false);
 
   const auth = getAuth();
 
@@ -120,6 +141,79 @@ const AdminPanel: React.FC = () => {
       setContactsLoading(false);
     };
     fetchContacts();
+  }, []);
+  // جلب نص "من نحن" من Firestore
+  useEffect(() => {
+    const fetchAbout = async () => {
+      setAboutLoading(true);
+      try {
+        const ref = fsDoc(db, 'settings', 'about');
+        const snap = await getDoc(ref);
+        if (snap.exists()) setAboutText(snap.data().text || '');
+      } catch {}
+      setAboutLoading(false);
+    };
+    fetchAbout();
+  }, []);
+  // جلب الشركاء من Firestore
+  useEffect(() => {
+    const fetchPartners = async () => {
+      setPartnersLoading(true);
+      try {
+        const ref = fsDoc(db, 'settings', 'partners');
+        const snap = await getDoc(ref);
+        if (snap.exists()) setPartners(snap.data().list || []);
+      } catch {}
+      setPartnersLoading(false);
+    };
+    fetchPartners();
+  }, []);
+  // جلب إعدادات الشريط المتحرك من Firestore
+  useEffect(() => {
+    const fetchMarquee = async () => {
+      setMarqueeLoading(true);
+      try {
+        const ref = fsDoc(db, 'settings', 'marquee');
+        const snap = await getDoc(ref);
+        if (snap.exists()) {
+          const d = snap.data();
+          setMarquee({
+            texts: d.texts || ["فرحنا بوجودك معنا!"],
+            speed: d.speed || 30,
+            color: d.color || "#ff9800",
+            fontSize: d.fontSize || 20
+          });
+        }
+      } catch {}
+      setMarqueeLoading(false);
+    };
+    fetchMarquee();
+  }, []);
+  // جلب صور السلايدر من Firestore
+  useEffect(() => {
+    const fetchSlider = async () => {
+      setSliderLoading(true);
+      try {
+        const ref = fsDoc(db, 'settings', 'slider');
+        const snap = await getDoc(ref);
+        if (snap.exists()) setSliderImages(snap.data().images || []);
+      } catch {}
+      setSliderLoading(false);
+    };
+    fetchSlider();
+  }, []);
+  // جلب صور من نحن من Firestore
+  useEffect(() => {
+    const fetchAboutImages = async () => {
+      setAboutImagesLoading(true);
+      try {
+        const ref = fsDoc(db, 'settings', 'about');
+        const snap = await getDoc(ref);
+        if (snap.exists()) setAboutImages(snap.data().images || []);
+      } catch {}
+      setAboutImagesLoading(false);
+    };
+    fetchAboutImages();
   }, []);
 
   // إضافة وحدة إلى Firestore
@@ -274,6 +368,174 @@ const AdminPanel: React.FC = () => {
       setSuccess(null);
     }
     setContactsLoading(false);
+  };
+  // حفظ نص "من نحن"
+  const handleSaveAbout = async (e: any) => {
+    e.preventDefault();
+    setAboutLoading(true);
+    try {
+      const ref = fsDoc(db, 'settings', 'about');
+      await setDoc(ref, { text: aboutText });
+      setSuccess('تم حفظ نبذة من نحن بنجاح!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في حفظ نبذة من نحن: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setAboutLoading(false);
+  };
+  // إضافة شريك جديد
+  const handleAddPartner = async (e: any) => {
+    e.preventDefault();
+    setPartnersLoading(true);
+    try {
+      let imageUrl = partnerForm.image;
+      if (partnerImageFile) {
+        const { getStorage, ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+        const storage = getStorage();
+        const imgRef = ref(storage, `partners/${Date.now()}_${partnerImageFile.name}`);
+        await uploadBytes(imgRef, partnerImageFile);
+        imageUrl = await getDownloadURL(imgRef);
+      }
+      const newPartner = { name: partnerForm.name, url: partnerForm.url, image: imageUrl };
+      const refDoc = fsDoc(db, 'settings', 'partners');
+      const snap = await getDoc(refDoc);
+      let list = snap.exists() ? (snap.data().list || []) : [];
+      list.push(newPartner);
+      await setDoc(refDoc, { list });
+      setPartners(list);
+      setPartnerForm({ name: '', url: '', image: '' });
+      setPartnerImageFile(null);
+      setSuccess('تم إضافة الشريك بنجاح!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في إضافة الشريك: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setPartnersLoading(false);
+  };
+  // حذف شريك
+  const handleDeletePartner = async (idx: number) => {
+    setPartnersLoading(true);
+    try {
+      const refDoc = fsDoc(db, 'settings', 'partners');
+      const snap = await getDoc(refDoc);
+      let list = snap.exists() ? (snap.data().list || []) : [];
+      list.splice(idx, 1);
+      await setDoc(refDoc, { list });
+      setPartners(list);
+      setSuccess('تم حذف الشريك بنجاح!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في حذف الشريك: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setPartnersLoading(false);
+  };
+  // حفظ إعدادات الشريط المتحرك
+  const handleSaveMarquee = async (e: any) => {
+    e.preventDefault();
+    setMarqueeLoading(true);
+    try {
+      const ref = fsDoc(db, 'settings', 'marquee');
+      await setDoc(ref, marquee);
+      setSuccess('تم حفظ إعدادات الشريط المتحرك بنجاح!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في حفظ إعدادات الشريط: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setMarqueeLoading(false);
+  };
+  // إضافة صور للسلايدر
+  const handleAddSliderImages = async (e: any) => {
+    e.preventDefault();
+    setSliderLoading(true);
+    try {
+      const { getStorage, ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+      const storage = getStorage();
+      let newImages: string[] = [];
+      for (const file of sliderFiles) {
+        const imgRef = ref(storage, `slider/${Date.now()}_${file.name}`);
+        await uploadBytes(imgRef, file);
+        const url = await getDownloadURL(imgRef);
+        newImages.push(url);
+      }
+      const allImages = [...sliderImages, ...newImages];
+      const refDoc = fsDoc(db, 'settings', 'slider');
+      await setDoc(refDoc, { images: allImages });
+      setSliderImages(allImages);
+      setSliderFiles([]);
+      setSuccess('تمت إضافة الصور للسلايدر بنجاح!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في رفع صور السلايدر: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setSliderLoading(false);
+  };
+  // حذف صورة من السلايدر
+  const handleDeleteSliderImage = async (idx: number) => {
+    setSliderLoading(true);
+    try {
+      const allImages = sliderImages.filter((_,i)=>i!==idx);
+      const refDoc = fsDoc(db, 'settings', 'slider');
+      await setDoc(refDoc, { images: allImages });
+      setSliderImages(allImages);
+      setSuccess('تم حذف الصورة من السلايدر!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في حذف صورة السلايدر: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setSliderLoading(false);
+  };
+  // إضافة صور من نحن
+  const handleAddAboutImages = async (e: any) => {
+    e.preventDefault();
+    setAboutImagesLoading(true);
+    try {
+      const { getStorage, ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+      const storage = getStorage();
+      let newImages: string[] = [];
+      for (const file of aboutImageFiles) {
+        const imgRef = ref(storage, `about/${Date.now()}_${file.name}`);
+        await uploadBytes(imgRef, file);
+        const url = await getDownloadURL(imgRef);
+        newImages.push(url);
+      }
+      const allImages = [...aboutImages, ...newImages];
+      const refDoc = fsDoc(db, 'settings', 'about');
+      const snap = await getDoc(refDoc);
+      const text = snap.exists() ? (snap.data().text || '') : '';
+      await setDoc(refDoc, { text, images: allImages });
+      setAboutImages(allImages);
+      setAboutImageFiles([]);
+      setSuccess('تمت إضافة الصور بنجاح!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في رفع صور من نحن: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setAboutImagesLoading(false);
+  };
+  // حذف صورة من نحن
+  const handleDeleteAboutImage = async (idx: number) => {
+    setAboutImagesLoading(true);
+    try {
+      const refDoc = fsDoc(db, 'settings', 'about');
+      const snap = await getDoc(refDoc);
+      const text = snap.exists() ? (snap.data().text || '') : '';
+      let allImages = aboutImages.filter((_,i)=>i!==idx);
+      await setDoc(refDoc, { text, images: allImages });
+      setAboutImages(allImages);
+      setSuccess('تم حذف الصورة!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في حذف صورة من نحن: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setAboutImagesLoading(false);
   };
 
   const allTabs = [...TABS, { key: 'التواصل', label: 'روابط التواصل' }];
@@ -438,6 +700,94 @@ const AdminPanel: React.FC = () => {
             <input value={contacts.discord} onChange={e=>setContacts(f=>({...f,discord:e.target.value}))} placeholder="رابط ديسكورد" style={{padding:8,borderRadius:8}} />
             <input value={contacts.gmail} onChange={e=>setContacts(f=>({...f,gmail:e.target.value}))} placeholder="بريد إلكتروني (Gmail)" style={{padding:8,borderRadius:8}} />
             <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:17,marginTop:8}} disabled={contactsLoading}>حفظ</button>
+          </form>
+        )}
+        {/* من نحن */}
+        {tab==='من نحن' && (
+          <>
+          <form onSubmit={handleSaveAbout} style={{maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:12}}>
+            <h3 style={{color:'#00bcd4',marginBottom:8}}>تعديل نبذة من نحن</h3>
+            <textarea value={aboutText} onChange={e=>setAboutText(e.target.value)} placeholder="اكتب نبذة عن المنصة..." style={{padding:12,borderRadius:8,minHeight:120,fontSize:17}} required />
+            <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:17,marginTop:8}} disabled={aboutLoading}>حفظ</button>
+          </form>
+          <form onSubmit={handleAddAboutImages} style={{maxWidth:600,margin:'24px auto',display:'flex',flexDirection:'column',gap:12}}>
+            <h4 style={{color:'#00bcd4'}}>صور من نحن</h4>
+            <input type="file" accept="image/*" multiple onChange={e=>setAboutImageFiles(Array.from(e.target.files||[]))} style={{padding:8,borderRadius:8}} />
+            <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:15,marginTop:8}} disabled={aboutImagesLoading}>إضافة صور</button>
+            <div style={{display:'flex',flexWrap:'wrap',gap:12,marginTop:8}}>
+              {aboutImages.map((img,i)=>(
+                <div key={i} style={{position:'relative'}}>
+                  <img src={img} alt="about" style={{width:80,height:80,borderRadius:8,objectFit:'cover',border:'2px solid #00bcd4'}} />
+                  <button type="button" onClick={()=>handleDeleteAboutImage(i)} style={{position:'absolute',top:2,right:2,background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'2px 8px',fontWeight:'bold',cursor:'pointer',fontSize:13}}>×</button>
+                </div>
+              ))}
+            </div>
+          </form>
+          </>
+        )}
+        {/* الشركاء */}
+        {tab==='الشركاء' && (
+          <div style={{maxWidth:600,margin:'0 auto'}}>
+            <form onSubmit={handleAddPartner} style={{display:'flex',flexDirection:'column',gap:10,marginBottom:24}}>
+              <h3 style={{color:'#00bcd4',marginBottom:8}}>إضافة شريك جديد</h3>
+              <input value={partnerForm.name} onChange={e=>setPartnerForm(f=>({...f,name:e.target.value}))} placeholder="اسم الشريك" style={{padding:8,borderRadius:8}} required />
+              <input value={partnerForm.url} onChange={e=>setPartnerForm(f=>({...f,url:e.target.value}))} placeholder="رابط الشريك (اختياري)" style={{padding:8,borderRadius:8}} />
+              <input type="file" accept="image/*" onChange={e=>setPartnerImageFile(e.target.files?.[0]||null)} style={{padding:8,borderRadius:8}} required />
+              <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:17,marginTop:8}} disabled={partnersLoading}>إضافة</button>
+            </form>
+            <div style={{display:'flex',flexWrap:'wrap',gap:16}}>
+              {partners.map((p,i)=>(
+                <div key={i} style={{border:'1px solid #eee',borderRadius:12,padding:12,minWidth:180,maxWidth:220,position:'relative',textAlign:'center'}}>
+                  {p.image && <img src={p.image} alt={p.name} style={{width:64,height:64,borderRadius:8,objectFit:'contain',marginBottom:8}} />}
+                  <b>{p.name}</b>
+                  {p.url && <div><a href={p.url} target="_blank" rel="noopener noreferrer" style={{color:'#2196f3',fontSize:15}}>رابط الشريك</a></div>}
+                  <button onClick={()=>handleDeletePartner(i)} style={{position:'absolute',top:8,left:8,background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'2px 10px',fontWeight:'bold',cursor:'pointer'}}>حذف</button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {/* إعدادات الشريط المتحرك */}
+        {tab==='الإعدادات' && (
+          <form onSubmit={handleSaveMarquee} style={{maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:12,marginBottom:32}}>
+            <h3 style={{color:'#00bcd4',marginBottom:8}}>إعدادات الشريط المتحرك</h3>
+            <div>
+              {marquee.texts.map((txt,i)=>(
+                <div key={i} style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
+                  <input value={txt} onChange={e=>setMarquee(m=>({...m,texts:m.texts.map((t,idx)=>idx===i?e.target.value:t)}))} style={{flex:1,padding:8,borderRadius:8}} />
+                  <button type="button" onClick={()=>setMarquee(m=>({...m,texts:m.texts.filter((_,idx)=>idx!==i)}))} style={{background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'4px 10px',fontWeight:'bold',cursor:'pointer'}}>حذف</button>
+                </div>
+              ))}
+              <button type="button" onClick={()=>setMarquee(m=>({...m,texts:[...m.texts,'']}))} style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'6px 18px',fontWeight:'bold',marginTop:4}}>إضافة نص</button>
+            </div>
+            <div style={{display:'flex',gap:8}}>
+              <label>السرعة:
+                <input type="number" value={marquee.speed} min={5} max={100} onChange={e=>setMarquee(m=>({...m,speed:Number(e.target.value)}))} style={{marginRight:8,padding:6,borderRadius:8,width:80}} />
+              </label>
+              <label>لون الخط:
+                <input type="color" value={marquee.color} onChange={e=>setMarquee(m=>({...m,color:e.target.value}))} style={{marginRight:8,width:40,height:32}} />
+              </label>
+              <label>حجم الخط:
+                <input type="number" value={marquee.fontSize} min={10} max={60} onChange={e=>setMarquee(m=>({...m,fontSize:Number(e.target.value)}))} style={{marginRight:8,padding:6,borderRadius:8,width:80}} />
+              </label>
+            </div>
+            <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:17,marginTop:8}} disabled={marqueeLoading}>حفظ إعدادات الشريط</button>
+          </form>
+        )}
+        {/* سلايدر الصور */}
+        {tab==='الإعدادات' && (
+          <form onSubmit={handleAddSliderImages} style={{maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:12,marginBottom:32}}>
+            <h3 style={{color:'#00bcd4',marginBottom:8}}>سلايدر الصور المتحرك</h3>
+            <input type="file" accept="image/*" multiple onChange={e=>setSliderFiles(Array.from(e.target.files||[]))} style={{padding:8,borderRadius:8}} />
+            <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:17,marginTop:8}} disabled={sliderLoading}>إضافة صور</button>
+            <div style={{display:'flex',flexWrap:'wrap',gap:12,marginTop:8}}>
+              {sliderImages.map((img,i)=>(
+                <div key={i} style={{position:'relative'}}>
+                  <img src={img} alt="slider" style={{width:80,height:80,borderRadius:8,objectFit:'cover',border:'2px solid #00bcd4'}} />
+                  <button type="button" onClick={()=>handleDeleteSliderImage(i)} style={{position:'absolute',top:2,right:2,background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'2px 8px',fontWeight:'bold',cursor:'pointer',fontSize:13}}>×</button>
+                </div>
+              ))}
+            </div>
           </form>
         )}
         {/* باقي الأقسام */}
