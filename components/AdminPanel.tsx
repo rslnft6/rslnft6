@@ -3,6 +3,8 @@ import { developers } from '../data/developers';
 import { db } from '../data/firebase';
 import { collection, addDoc, onSnapshot, deleteDoc, doc } from 'firebase/firestore';
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { defaultContacts, ContactLinks } from '../data/contacts';
+import { doc as fsDoc, getDoc, setDoc } from 'firebase/firestore';
 
 console.log('=== AdminPanel.tsx Mounted ===');
 let debugStep = 'AdminPanel mounted';
@@ -40,12 +42,7 @@ const AdminPanel: React.FC = () => {
   }, []);
 
   // صلاحيات الأدوار
-  const rolePermissions: any = {
-    'مدير': ['الوحدات', 'المطورين', 'المستخدمون', 'الإعلانات', 'الإعدادات'],
-    'موظف': ['الوحدات', 'المطورين'],
-    'مطور': ['الوحدات'],
-  };
-  const allowedTabs = currentUser ? (rolePermissions[currentUser.role] || []) : [];
+  const allowedTabs = ['الوحدات', 'المطورين', 'المستخدمون', 'الإعلانات', 'الإعدادات'];
 
   // وحدات Firestore
   const [units, setUnits] = useState<any[]>([]);
@@ -69,8 +66,11 @@ const AdminPanel: React.FC = () => {
     model3dUrl: string;
     developerId: string;
     compound: string;
+    price: string;
+    paymentType: string;
+    finance: string;
   }>({
-    title: '', type: '', details: '', area: '', rooms: '', bathrooms: '', kitchens: '', hasGarden: false, hasPool: false, phone: '', whatsapp: '', lat: '', lng: '', images: [], vrUrl: '', panoramaUrl: '', model3dUrl: '', developerId: '', compound: ''
+    title: '', type: '', details: '', area: '', rooms: '', bathrooms: '', kitchens: '', hasGarden: false, hasPool: false, phone: '', whatsapp: '', lat: '', lng: '', images: [], vrUrl: '', panoramaUrl: '', model3dUrl: '', developerId: '', compound: '', price: '', paymentType: '', finance: ''
   });
   // مطورين Firestore
   const [devs, setDevs] = useState<any[]>([]);
@@ -81,6 +81,9 @@ const AdminPanel: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  // بيانات التواصل
+  const [contacts, setContacts] = useState<ContactLinks>(defaultContacts);
+  const [contactsLoading, setContactsLoading] = useState(false);
 
   const auth = getAuth();
 
@@ -105,6 +108,19 @@ const AdminPanel: React.FC = () => {
     });
     return () => unsub();
   }, []);
+  // جلب بيانات التواصل من Firestore
+  useEffect(() => {
+    const fetchContacts = async () => {
+      setContactsLoading(true);
+      try {
+        const ref = fsDoc(db, 'settings', 'contacts');
+        const snap = await getDoc(ref);
+        if (snap.exists()) setContacts(snap.data() as ContactLinks);
+      } catch {}
+      setContactsLoading(false);
+    };
+    fetchContacts();
+  }, []);
 
   // إضافة وحدة إلى Firestore
   const handleAddUnit = async (e: any) => {
@@ -127,6 +143,9 @@ const AdminPanel: React.FC = () => {
       await addDoc(collection(db, 'units'), {
         ...unitForm,
         images: imageUrls,
+        price: unitForm.price,
+        paymentType: unitForm.paymentType,
+        finance: unitForm.finance,
         developerId: unitForm.developerId,
         compound: unitForm.compound,
         area: unitForm.area,
@@ -144,7 +163,7 @@ const AdminPanel: React.FC = () => {
         model3dUrl: unitForm.model3dUrl
       });
       setUnitForm({
-        title: '', type: '', details: '', area: '', rooms: '', bathrooms: '', kitchens: '', hasGarden: false, hasPool: false, phone: '', whatsapp: '', lat: '', lng: '', images: [], vrUrl: '', panoramaUrl: '', model3dUrl: '', developerId: '', compound: ''
+        title: '', type: '', details: '', area: '', rooms: '', bathrooms: '', kitchens: '', hasGarden: false, hasPool: false, phone: '', whatsapp: '', lat: '', lng: '', images: [], vrUrl: '', panoramaUrl: '', model3dUrl: '', developerId: '', compound: '', price: '', paymentType: '', finance: ''
       });
       setSuccess('تمت إضافة الوحدة بنجاح!');
       setError(null);
@@ -241,13 +260,30 @@ const AdminPanel: React.FC = () => {
     }
     setLoading(false);
   };
+  // حفظ بيانات التواصل
+  const handleSaveContacts = async (e: any) => {
+    e.preventDefault();
+    setContactsLoading(true);
+    try {
+      const ref = fsDoc(db, 'settings', 'contacts');
+      await setDoc(ref, contacts);
+      setSuccess('تم حفظ بيانات التواصل بنجاح!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في حفظ بيانات التواصل: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setContactsLoading(false);
+  };
+
+  const allTabs = [...TABS, { key: 'التواصل', label: 'روابط التواصل' }];
 
   return (
     <div style={{display:'flex',gap:32,minHeight:600}}>
       {/* الشريط الجانبي */}
       <div style={{minWidth:180,background:'#f5f7fa',borderRadius:16,padding:'24px 0',boxShadow:'0 2px 12px #e0e0e0',display:'flex',flexDirection:'column',alignItems:'center',gap:8}}>
         <div style={{fontWeight:'bold',fontSize:22,color:'#00bcd4',marginBottom:16}}>لوحة التحكم</div>
-        {TABS.filter(t => allowedTabs.includes(t.key)).map(t => (
+        {allTabs.filter(t => allowedTabs.includes(t.key) || t.key==='التواصل').map(t => (
           <button key={t.key} onClick={()=>setTab(t.key)} style={{
             background:tab===t.key?'#00bcd4':'#fff',
             color:tab===t.key?'#fff':'#222',
@@ -303,6 +339,17 @@ const AdminPanel: React.FC = () => {
                 {devs.map((d:any)=>(<option key={d.id} value={d.id}>{d.name}</option>))}
               </select>
               <input value={unitForm.compound} onChange={e=>setUnitForm(f=>({...f,compound:e.target.value}))} placeholder="اسم الكمبوند (اختياري)" style={{margin:4,padding:8,borderRadius:8}} />
+              <input value={unitForm.price} onChange={e=>setUnitForm(f=>({...f,price:e.target.value}))} placeholder="السعر بالجنيه أو العملة" style={{margin:4,padding:8,borderRadius:8}} required />
+              <select value={unitForm.paymentType} onChange={e=>setUnitForm(f=>({...f,paymentType:e.target.value}))} style={{margin:4,padding:8,borderRadius:8}} required>
+                <option value="">نوع الدفع</option>
+                <option value="كاش">كاش</option>
+                <option value="تقسيط">تقسيط</option>
+              </select>
+              <select value={unitForm.finance} onChange={e=>setUnitForm(f=>({...f,finance:e.target.value}))} style={{margin:4,padding:8,borderRadius:8}} required>
+                <option value="">تمويل عقاري؟</option>
+                <option value="تمويل عقاري">تمويل عقاري</option>
+                <option value="بدون تمويل">بدون تمويل</option>
+              </select>
               <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold',margin:4}} disabled={loading}>إضافة وحدة</button>
             </form>
             {/* عرض الوحدات */}
@@ -320,6 +367,8 @@ const AdminPanel: React.FC = () => {
                   <div>الموقع: {u.lat && u.lng ? `${u.lat}, ${u.lng}` : '---'}</div>
                   <div>المطور: {devs.find(d=>d.id===u.developerId)?.name||'---'}</div>
                   <div>الكمبوند: {u.compound||'---'}</div>
+                  <div>السعر: {u.price||'---'}</div>
+                  <div>الدفع: {u.paymentType||'---'} | التمويل: {u.finance||'---'}</div>
                   {u.images && u.images.length>0 && <div style={{display:'flex',gap:4,flexWrap:'wrap'}}>{u.images.map((img:string,idx:number)=>(<img key={idx} src={img} alt="img" style={{width:48,height:48,borderRadius:6,objectFit:'cover'}}/>))}</div>}
                   {u.vrUrl && <div><a href={u.vrUrl} target="_blank" rel="noopener noreferrer">VR/3D</a></div>}
                   {u.panoramaUrl && <div><a href={u.panoramaUrl} target="_blank" rel="noopener noreferrer">بانوراما</a></div>}
@@ -374,6 +423,22 @@ const AdminPanel: React.FC = () => {
               ))}
             </div>
           </div>
+        )}
+        {/* روابط التواصل */}
+        {tab==='التواصل' && (
+          <form onSubmit={handleSaveContacts} style={{maxWidth:400,margin:'0 auto',display:'flex',flexDirection:'column',gap:12}}>
+            <h3 style={{color:'#00bcd4',marginBottom:8}}>روابط وأرقام التواصل</h3>
+            <input value={contacts.whatsapp} onChange={e=>setContacts(f=>({...f,whatsapp:e.target.value}))} placeholder="رقم واتساب (دولي)" style={{padding:8,borderRadius:8}} required />
+            <input value={contacts.phone} onChange={e=>setContacts(f=>({...f,phone:e.target.value}))} placeholder="رقم اتصال" style={{padding:8,borderRadius:8}} required />
+            <input value={contacts.facebook} onChange={e=>setContacts(f=>({...f,facebook:e.target.value}))} placeholder="رابط فيسبوك" style={{padding:8,borderRadius:8}} />
+            <input value={contacts.snapchat} onChange={e=>setContacts(f=>({...f,snapchat:e.target.value}))} placeholder="رابط سناب شات" style={{padding:8,borderRadius:8}} />
+            <input value={contacts.twitter} onChange={e=>setContacts(f=>({...f,twitter:e.target.value}))} placeholder="رابط تويتر" style={{padding:8,borderRadius:8}} />
+            <input value={contacts.instagram} onChange={e=>setContacts(f=>({...f,instagram:e.target.value}))} placeholder="رابط انستجرام" style={{padding:8,borderRadius:8}} />
+            <input value={contacts.telegram} onChange={e=>setContacts(f=>({...f,telegram:e.target.value}))} placeholder="رابط تيليجرام" style={{padding:8,borderRadius:8}} />
+            <input value={contacts.discord} onChange={e=>setContacts(f=>({...f,discord:e.target.value}))} placeholder="رابط ديسكورد" style={{padding:8,borderRadius:8}} />
+            <input value={contacts.gmail} onChange={e=>setContacts(f=>({...f,gmail:e.target.value}))} placeholder="بريد إلكتروني (Gmail)" style={{padding:8,borderRadius:8}} />
+            <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:17,marginTop:8}} disabled={contactsLoading}>حفظ</button>
+          </form>
         )}
         {/* باقي الأقسام */}
         {tab!=='الوحدات' && tab!=='المطورين' && tab!=='المستخدمون' && (!allowedTabs.includes(tab)) && <div style={{color:'#888',fontSize:18}}>ليس لديك صلاحية لهذا القسم.</div>}

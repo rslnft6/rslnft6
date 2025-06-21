@@ -24,6 +24,10 @@ import ImagesSlider from '../components/ImagesSlider';
 import SmartChat from '../components/SmartChat';
 import { db } from '../data/firebase';
 import { collection, getDocs } from 'firebase/firestore';
+import { FaUserCircle } from 'react-icons/fa';
+import { defaultContacts, ContactLinks } from '../data/contacts';
+import { doc as fsDoc, getDoc } from 'firebase/firestore';
+import { FaWhatsapp, FaPhone, FaFacebook, FaSnapchatGhost, FaTwitter, FaInstagram, FaTelegram, FaDiscord, FaEnvelope } from 'react-icons/fa';
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -51,6 +55,12 @@ interface Compound {
 
 const properties = getAllProperties();
 
+const PANORAMA_IMAGES = [
+  '/panorama/pano1.jpg',
+  '/panorama/pano2.jpg',
+  '/panorama/pano3.jpg',
+];
+
 export default function Home() {
   const { t, i18n } = useTranslation();
   const { locale, push } = useRouter();
@@ -68,6 +78,7 @@ export default function Home() {
   });
   const [chatOpen, setChatOpen] = useState(false);
   const [firebaseUnits, setFirebaseUnits] = useState<any[]>([]);
+  const [showPano, setShowPano] = useState<string|null>(null);
 
   // البحث الذكي
   const handleSmartSearch = (q: string) => {
@@ -124,6 +135,26 @@ export default function Home() {
     });
   }, [search, type, country, compound, developer, finance, purpose]);
 
+  // زر اللغة الموحد
+  const toggleLang = () => {
+    const newLang = i18n.language === 'ar' ? 'en' : 'ar';
+    i18n.changeLanguage(newLang);
+    push('/', undefined, { locale: newLang });
+  };
+
+  // روابط التواصل
+  const [contacts, setContacts] = useState<ContactLinks>(defaultContacts);
+  useEffect(() => {
+    const fetchContacts = async () => {
+      try {
+        const ref = fsDoc(db, 'settings', 'contacts');
+        const snap = await getDoc(ref);
+        if (snap.exists()) setContacts(snap.data() as ContactLinks);
+      } catch {}
+    };
+    fetchContacts();
+  }, []);
+
   return (
     <div className="container" style={{
       minHeight: '100vh',
@@ -140,17 +171,59 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <div className={`${geistSans.variable} ${geistMono.variable}`}>
-        <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:16}}>
-          <div>
-            <button onClick={()=>push('/', undefined, { locale: 'ar' })} style={{background:locale==='ar'?'#00bcd4':'#eee',color:locale==='ar'?'#fff':'#222',border:'none',borderRadius:8,padding:'6px 16px',fontWeight:'bold',fontSize:16,minWidth:110}}>
-              العربية
-            </button>
-            <button onClick={()=>push('/', undefined, { locale: 'en' })} style={{background:locale==='en'?'#00bcd4':'#eee',color:locale==='en'?'#fff':'#222',border:'none',borderRadius:8,padding:'6px 16px',fontWeight:'bold',fontSize:16,minWidth:110,marginLeft:8}}>
-              English
-            </button>
-          </div>
-          <button onClick={()=>window.location.href='/login'} style={{background:'#2196f3',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold',fontSize:16,cursor:'pointer'}}>
-            تسجيل الدخول
+        {/* هيدر احترافي عالمي */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: 16,
+          padding: '8px 0',
+          borderBottom: '1px solid #e0e0e0',
+          background: 'rgba(255,255,255,0.95)',
+          position: 'sticky',
+          top: 0,
+          zIndex: 100
+        }}>
+          {/* زر اللغة الموحد */}
+          <button
+            onClick={toggleLang}
+            title={i18n.language === 'ar' ? 'English' : 'العربية'}
+            style={{
+              background: '#fff',
+              color: '#00bcd4',
+              border: '2px solid #00bcd4',
+              borderRadius: '50%',
+              width: 44,
+              height: 44,
+              fontWeight: 'bold',
+              fontSize: 18,
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px #e0e0e0',
+              transition: 'all 0.2s',
+              marginRight: 8
+            }}
+          >
+            {i18n.language === 'ar' ? 'EN' : 'AR'}
+          </button>
+          {/* زر تسجيل الدخول الدائري */}
+          <button
+            onClick={() => window.location.href = '/login'}
+            title={t('login') || 'تسجيل الدخول'}
+            style={{
+              background: '#00bcd4',
+              border: 'none',
+              borderRadius: '50%',
+              width: 44,
+              height: 44,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '0 2px 8px #b2ebf2',
+              cursor: 'pointer',
+              marginLeft: 8
+            }}
+          >
+            <FaUserCircle size={26} color="#fff" />
           </button>
         </div>
         <main>
@@ -312,7 +385,7 @@ export default function Home() {
           </div>
           <h1 className="section-title">تجربة الواقع الافتراضي (VR)</h1>
           <div className="vr-section">
-            <VRView />
+            <VRView src="" />
           </div>
           <h1 className="section-title">معرض صور بانوراما 360°</h1>
           <VR360Gallery />
@@ -333,6 +406,69 @@ export default function Home() {
   <div style={{textAlign:'center',marginTop:24,color:'#00bcd4',fontSize:16,fontWeight:'bold'}}>
     <img src="/globe.svg" alt="logo" style={{width:32,verticalAlign:'middle',marginRight:8}} />
     جميع الحقوق محفوظة The team one world criptoman © {new Date().getFullYear()}
+  </div>
+  {/* معرض صور بانوراما تجريبي */}
+  <div style={{textAlign:'center',marginBottom:24}}>
+    <div style={{fontWeight:'bold',fontSize:20,color:'#00bcd4',marginBottom:8}}>معرض بانوراما تجريبي</div>
+    <div style={{display:'flex',justifyContent:'center',gap:16,flexWrap:'wrap'}}>
+      {PANORAMA_IMAGES.map((src,i) => (
+        <img
+          key={i}
+          src={src}
+          alt={`بانوراما ${i+1}`}
+          style={{width:120,height:60,objectFit:'cover',borderRadius:12,cursor:'pointer',boxShadow:'0 2px 8px #e0e0e0'}}
+          onClick={()=>setShowPano(src)}
+        />
+      ))}
+    </div>
+    {showPano && (
+      <div style={{position:'fixed',top:0,left:0,width:'100vw',height:'100vh',background:'rgba(0,0,0,0.85)',zIndex:9999,display:'flex',alignItems:'center',justifyContent:'center'}} onClick={()=>setShowPano(null)}>
+        <div style={{position:'relative',background:'#222',borderRadius:16,padding:16}} onClick={e=>e.stopPropagation()}>
+          <VRView src={showPano} />
+          <button onClick={()=>setShowPano(null)} style={{position:'absolute',top:8,right:8,background:'#e53935',color:'#fff',border:'none',borderRadius:8,padding:'4px 16px',fontWeight:'bold',fontSize:18,cursor:'pointer'}}>إغلاق</button>
+        </div>
+      </div>
+    )}
+  </div>
+  <div style={{
+    background: 'linear-gradient(90deg,#00bcd4 0%,#2196f3 100%)',
+    color: '#fff',
+    borderRadius: 16,
+    padding: '24px 32px',
+    margin: '32px auto 0 auto',
+    maxWidth: 700,
+    boxShadow: '0 2px 16px #b2ebf2',
+    fontWeight: 'bold',
+    fontSize: 20,
+    textAlign: 'center',
+    letterSpacing: 1
+  }}>
+    <span style={{fontSize:28,display:'block',marginBottom:8}}>من نحن</span>
+    <span>
+      نحن فريق <span style={{color:'#ffeb3b'}}>Realstatelive</span> نؤمن بأن العقار هو استثمار المستقبل، ونعمل على تقديم تجربة رقمية متكاملة تجمع بين أحدث التقنيات (الذكاء الاصطناعي، الواقع الافتراضي، الخرائط الذكية) لتسهيل البحث، المقارنة، واتخاذ القرار العقاري بثقة وشفافية. هدفنا أن نكون المنصة العقارية الأكثر ابتكاراً وموثوقية في العالم العربي، بخدمة احترافية ودعم حقيقي لكل عميل ومطور.
+    </span>
+    <div style={{marginTop:32}}>
+      <span style={{fontSize:22,display:'block',marginBottom:8,color:'#ffeb3b'}}>شركاؤنا</span>
+      <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:18,alignItems:'center'}}>
+        {developers.filter(d=>d.logo).map((d,i)=>(
+          <img key={i} src={d.logo} alt={d.name} title={d.name} style={{height:48,width:'auto',background:'#fff',borderRadius:12,padding:6,boxShadow:'0 2px 8px #b2ebf2'}} />
+        ))}
+      </div>
+    </div>
+    <div style={{marginTop:24,display:'flex',flexWrap:'wrap',justifyContent:'center',gap:18}}>
+      <a href={`https://wa.me/${contacts.whatsapp}`} target="_blank" rel="noopener noreferrer" style={{color:'#25d366',fontSize:28}} title="واتساب"><FaWhatsapp /></a>
+      <a href={`tel:${contacts.phone}`} style={{color:'#fff',fontSize:28}} title="اتصال"><FaPhone /></a>
+      <a href={contacts.facebook} target="_blank" rel="noopener noreferrer" style={{color:'#1877f3',fontSize:28}} title="فيسبوك"><FaFacebook /></a>
+      <a href={contacts.snapchat} target="_blank" rel="noopener noreferrer" style={{color:'#fffc00',fontSize:28}} title="سناب شات"><FaSnapchatGhost /></a>
+      <a href={contacts.twitter} target="_blank" rel="noopener noreferrer" style={{color:'#1da1f2',fontSize:28}} title="تويتر"><FaTwitter /></a>
+      <a href={contacts.instagram} target="_blank" rel="noopener noreferrer" style={{color:'#e1306c',fontSize:28}} title="انستجرام"><FaInstagram /></a>
+      <a href={contacts.telegram} target="_blank" rel="noopener noreferrer" style={{color:'#0088cc',fontSize:28}} title="تيليجرام"><FaTelegram /></a>
+      <a href={contacts.discord} target="_blank" rel="noopener noreferrer" style={{color:'#5865f2',fontSize:28}} title="ديسكورد"><FaDiscord /></a>
+      <a href={contacts.gmail} target="_blank" rel="noopener noreferrer" style={{color:'#fff',fontSize:28}} title="Gmail"><FaEnvelope /></a>
+    </div>
+    <div style={{marginTop:12,fontSize:16,color:'#fff',fontWeight:'normal'}}>
+      للتواصل السريع: <a href={`tel:${contacts.phone}`} style={{color:'#ffeb3b',textDecoration:'underline'}}>{contacts.phone}</a> أو واتساب: <a href={`https://wa.me/${contacts.whatsapp}`} style={{color:'#25d366',textDecoration:'underline'}}>{contacts.whatsapp}</a>
+    </div>
   </div>
 </footer>
     </div>
