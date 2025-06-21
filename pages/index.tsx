@@ -80,11 +80,14 @@ export default function Home() {
   const [firebaseUnits, setFirebaseUnits] = useState<any[]>([]);
   const [showPano, setShowPano] = useState<string|null>(null);
   const [showContacts, setShowContacts] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
   // البحث الذكي
   const handleSmartSearch = (q: string) => {
     setSearch(q);
-    setFiltered(smartSearch(q, properties));
+    // البحث في جميع الوحدات (المحلية + فايرستور)
+    const all = [...firebaseUnits, ...properties];
+    setFiltered(smartSearch(q, all));
   };
 
   // البحث الصوتي: عند النتيجة يتم البحث الذكي مباشرة
@@ -399,50 +402,55 @@ export default function Home() {
         </main>
       </div>
       <footer style={{background:'#f5f7fa',color:'#222',padding:'32px 0 16px 0',marginTop:40}}>
-    <div style={{
-      background: 'linear-gradient(90deg,#00bcd4 0%,#2196f3 100%)',
-      color: '#fff',
-      borderRadius: 16,
-      padding: '32px 32px',
-      margin: '0 auto',
-      maxWidth: 800,
-      boxShadow: '0 2px 16px #b2ebf2',
-      fontWeight: 'bold',
-      fontSize: 20,
-      textAlign: 'center',
-      letterSpacing: 1
-    }}>
-      <button onClick={()=>window.location.href='/about'} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'14px 36px',fontWeight:'bold',fontSize:24,cursor:'pointer',marginBottom:18}}>من نحن</button>
-      <div style={{fontSize:17,fontWeight:'normal',color:'#fff',margin:'16px 0 0 0',lineHeight:1.9}}>
+  <div style={{
+    background: 'linear-gradient(90deg,#00bcd4 0%,#2196f3 100%)',
+    color: '#fff',
+    borderRadius: 16,
+    padding: '32px 32px',
+    margin: '0 auto',
+    maxWidth: 800,
+    boxShadow: '0 2px 16px #b2ebf2',
+    fontWeight: 'bold',
+    fontSize: 20,
+    textAlign: 'center',
+    letterSpacing: 1
+  }}>
+    <div style={{display:'flex',justifyContent:'center',gap:16,marginBottom:18,flexWrap:'wrap'}}>
+      <button onClick={()=>setShowAbout(!showAbout)} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'14px 36px',fontWeight:'bold',fontSize:20,cursor:'pointer'}}>من نحن</button>
+      <button onClick={()=>setShowContacts(!showContacts)} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'14px 36px',fontWeight:'bold',fontSize:20,cursor:'pointer'}}>تواصل معنا</button>
+      <button onClick={()=>window.location.href='/partners'} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'14px 36px',fontWeight:'bold',fontSize:20,cursor:'pointer'}}>شركاؤنا</button>
+    </div>
+    {/* نبذة من نحن */}
+    {showAbout && (
+      <div style={{margin:'16px auto',background:'#fff',color:'#00bcd4',borderRadius:12,padding:'18px 16px',maxWidth:600,fontSize:18,fontWeight:'normal',boxShadow:'0 2px 8px #b2ebf2'}}>
         نحن منصة <span style={{color:'#ffeb3b'}}>Realstatelive</span> الرقمية العقارية الرائدة في الشرق الأوسط، نقدم حلولاً متكاملة تجمع بين الذكاء الاصطناعي، الواقع الافتراضي، الخرائط الذكية، البحث الصوتي، الدردشة الذكية، تصفح ثلاثي الأبعاد، وتكامل مع أحدث تقنيات البلوكتشين.<br/><br/>
         قريبًا: سنطلق أول منصة <b>NFTs</b> عقارية في المنطقة، لربط العقارات في الإمارات والبحرين بالأصول الرقمية، مع إمكانية الدفع بمحافظ البلوكتشين والتعامل الكامل عبر تقنيات Web3.<br/><br/>
         هدفنا أن نكون الخيار الأول لكل من يبحث عن الابتكار والشفافية في السوق العقاري، ونمنحك تجربة عالمية بمعايير شركات التكنولوجيا الكبرى.
       </div>
-      <div style={{marginTop:28}}>
-        <button onClick={()=>setShowContacts(!showContacts)} style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',fontWeight:'bold',fontSize:18,cursor:'pointer',marginBottom:8}}>تواصل معنا</button>
-        {showContacts && (
-          <div style={{marginTop:16,display:'flex',flexWrap:'wrap',justifyContent:'center',gap:18}}>
-            <a href={`https://wa.me/${contacts.whatsapp}`} target="_blank" rel="noopener noreferrer" style={{color:'#25d366',fontSize:28}} title="واتساب"><FaWhatsapp /></a>
-            <a href={`tel:${contacts.phone}`} style={{color:'#fff',fontSize:28}} title="اتصال"><FaPhone /></a>
-            <a href={contacts.facebook} target="_blank" rel="noopener noreferrer" style={{color:'#1877f3',fontSize:28}} title="فيسبوك"><FaFacebook /></a>
-            <a href={contacts.snapchat} target="_blank" rel="noopener noreferrer" style={{color:'#fffc00',fontSize:28}} title="سناب شات"><FaSnapchatGhost /></a>
-            <a href={contacts.twitter} target="_blank" rel="noopener noreferrer" style={{color:'#1da1f2',fontSize:28}} title="تويتر"><FaTwitter /></a>
-            <a href={contacts.instagram} target="_blank" rel="noopener noreferrer" style={{color:'#e1306c',fontSize:28}} title="انستجرام"><FaInstagram /></a>
-            <a href={contacts.telegram} target="_blank" rel="noopener noreferrer" style={{color:'#0088cc',fontSize:28}} title="تيليجرام"><FaTelegram /></a>
-            <a href={contacts.discord} target="_blank" rel="noopener noreferrer" style={{color:'#5865f2',fontSize:28}} title="ديسكورد"><FaDiscord /></a>
-            <a href={contacts.gmail} target="_blank" rel="noopener noreferrer" style={{color:'#fff',fontSize:28}} title="Gmail"><FaEnvelope /></a>
-          </div>
-        )}
+    )}
+    {/* أيقونات التواصل */}
+    {showContacts && (
+      <div style={{marginTop:16,display:'flex',flexWrap:'wrap',justifyContent:'center',gap:18}}>
+        <a href={`https://wa.me/${contacts.whatsapp}`} target="_blank" rel="noopener noreferrer" style={{color:'#25d366',fontSize:28}} title="واتساب"><FaWhatsapp /></a>
+        <a href={`tel:${contacts.phone}`} style={{color:'#fff',fontSize:28}} title="اتصال"><FaPhone /></a>
+        <a href={contacts.facebook} target="_blank" rel="noopener noreferrer" style={{color:'#1877f3',fontSize:28}} title="فيسبوك"><FaFacebook /></a>
+        <a href={contacts.snapchat} target="_blank" rel="noopener noreferrer" style={{color:'#fffc00',fontSize:28}} title="سناب شات"><FaSnapchatGhost /></a>
+        <a href={contacts.twitter} target="_blank" rel="noopener noreferrer" style={{color:'#1da1f2',fontSize:28}} title="تويتر"><FaTwitter /></a>
+        <a href={contacts.instagram} target="_blank" rel="noopener noreferrer" style={{color:'#e1306c',fontSize:28}} title="انستجرام"><FaInstagram /></a>
+        <a href={contacts.telegram} target="_blank" rel="noopener noreferrer" style={{color:'#0088cc',fontSize:28}} title="تيليجرام"><FaTelegram /></a>
+        <a href={contacts.discord} target="_blank" rel="noopener noreferrer" style={{color:'#5865f2',fontSize:28}} title="ديسكورد"><FaDiscord /></a>
+        <a href={contacts.gmail} target="_blank" rel="noopener noreferrer" style={{color:'#fff',fontSize:28}} title="Gmail"><FaEnvelope /></a>
       </div>
-      <div style={{marginTop:18,fontSize:15,color:'#fff',fontWeight:'normal'}}>
-        للتواصل السريع: <a href={`tel:${contacts.phone}`} style={{color:'#ffeb3b',textDecoration:'underline'}}>{contacts.phone}</a> أو واتساب: <a href={`https://wa.me/${contacts.whatsapp}`} style={{color:'#25d366',textDecoration:'underline'}}>{contacts.whatsapp}</a>
-      </div>
+    )}
+    <div style={{marginTop:18,fontSize:15,color:'#fff',fontWeight:'normal'}}>
+      للتواصل السريع: <a href={`tel:${contacts.phone}`} style={{color:'#ffeb3b',textDecoration:'underline'}}>{contacts.phone}</a> أو واتساب: <a href={`https://wa.me/${contacts.whatsapp}`} style={{color:'#25d366',textDecoration:'underline'}}>{contacts.whatsapp}</a>
     </div>
-    <div style={{textAlign:'center',marginTop:24,color:'#00bcd4',fontSize:16,fontWeight:'bold'}}>
-      <img src="/globe.svg" alt="logo" style={{width:32,verticalAlign:'middle',marginRight:8}} />
-      جميع الحقوق محفوظة Realstatelive © {new Date().getFullYear()}
-    </div>
-  </footer>
+  </div>
+  <div style={{textAlign:'center',marginTop:24,color:'#00bcd4',fontSize:16,fontWeight:'bold'}}>
+    <img src="/globe.svg" alt="logo" style={{width:32,verticalAlign:'middle',marginRight:8}} />
+    جميع الحقوق محفوظة Realstatelive © {new Date().getFullYear()}
+  </div>
+</footer>
     </div>
   );
 }
