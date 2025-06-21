@@ -1,7 +1,6 @@
 import dynamic from 'next/dynamic';
 import { useState } from 'react';
 import React from 'react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
 import { db } from '../data/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
@@ -15,17 +14,13 @@ export default function AdminPage() {
   const [debugStep, setDebugStep] = useState('بعد الاستيراد الديناميكي');
   const [currentUser, setCurrentUser] = useState<any>(null);
 
-  // تسجيل الدخول عبر Firebase Auth ثم جلب بيانات المستخدم من Firestore
+  // تسجيل الدخول عبر Firestore مباشرة باسم المستخدم وكلمة المرور
   const handleLogin = async (e: any) => {
     e.preventDefault();
     setError('');
     setDebugStep('جاري التحقق من بيانات الدخول...');
-    const auth = getAuth();
-    const email = user + '@app.local';
     try {
-      const cred = await signInWithEmailAndPassword(auth, email, pass);
-      // جلب بيانات المستخدم من Firestore
-      const q = query(collection(db, 'users'), where('uid', '==', cred.user.uid));
+      const q = query(collection(db, 'users'), where('username', '==', user), where('password', '==', pass));
       const snap = await getDocs(q);
       if (!snap.empty) {
         const userData = snap.docs[0].data();
@@ -35,11 +30,11 @@ export default function AdminPage() {
         localStorage.setItem('admin-current-user', JSON.stringify(userData));
         setDebugStep('تم تسجيل الدخول بنجاح');
       } else {
-        setError('المستخدم غير موجود في قاعدة البيانات');
-        setDebugStep('فشل جلب بيانات المستخدم');
+        setError('اسم المستخدم أو كلمة المرور غير صحيحة');
+        setDebugStep('فشل التحقق من بيانات المستخدم');
       }
     } catch (err: any) {
-      setError('اسم المستخدم أو كلمة المرور غير صحيحة');
+      setError('حدث خطأ أثناء التحقق من البيانات');
       setDebugStep('فشل تسجيل الدخول');
     }
   };

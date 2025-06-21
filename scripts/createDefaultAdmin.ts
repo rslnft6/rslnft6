@@ -1,29 +1,19 @@
 import { db } from '../data/firebase';
-import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, setDoc, doc } from 'firebase/firestore';
 
 async function createDefaultAdmin() {
-  const auth = getAuth();
-  const email = 'admin@app.local';
-  const password = '112233';
-  const name = 'مدير النظام';
-  const username = 'admin';
-  const role = 'مدير';
-
   try {
-    // إنشاء المستخدم في Firebase Auth
-    const cred = await createUserWithEmailAndPassword(auth, email, password);
-    await updateProfile(cred.user, { displayName: name });
-    // إضافة بيانات المستخدم في Firestore
-    await addDoc(collection(db, 'users'), {
-      name,
-      username,
-      role,
-      uid: cred.user.uid
+    // إضافة مستخدم admin بكلمة مرور 112233 مباشرة في Firestore
+    const userRef = doc(collection(db, 'users'));
+    await setDoc(userRef, {
+      username: 'admin',
+      password: '112233',
+      role: 'admin',
+      createdAt: new Date(),
     });
-    console.log('تم إنشاء مدير افتراضي بنجاح');
+    console.log('تم إضافة المستخدم admin بنجاح');
   } catch (err: any) {
-    console.error('خطأ في إنشاء المدير الافتراضي:', err.message || err);
+    console.error('خطأ في إضافة المستخدم:', err.message || err);
   }
 }
 
