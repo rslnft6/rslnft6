@@ -5,6 +5,7 @@ import { collection, addDoc, onSnapshot, deleteDoc, doc } from 'firebase/firesto
 import { getAuth, createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { defaultContacts, ContactLinks } from '../data/contacts';
 import { doc as fsDoc, getDoc, setDoc } from 'firebase/firestore';
+import { compounds } from '../data/compounds';
 
 console.log('=== AdminPanel.tsx Mounted ===');
 let debugStep = 'AdminPanel mounted';
@@ -105,6 +106,11 @@ const AdminPanel: React.FC = () => {
   const [aboutImages, setAboutImages] = useState<string[]>([]);
   const [aboutImageFiles, setAboutImageFiles] = useState<File[]>([]);
   const [aboutImagesLoading, setAboutImagesLoading] = useState(false);
+  // الكمباوندات
+  const [compoundsList, setCompoundsList] = useState<any[]>([]);
+  const [compoundForm, setCompoundForm] = useState({ name: '', city: '', country: '', developer: '', logo: '' });
+  const [showAddDev, setShowAddDev] = useState(false);
+  const [showAddCompound, setShowAddCompound] = useState(false);
 
   const auth = getAuth();
 
@@ -214,6 +220,13 @@ const AdminPanel: React.FC = () => {
       setAboutImagesLoading(false);
     };
     fetchAboutImages();
+  }, []);
+  // جلب الكمباوندات من Firestore
+  useEffect(() => {
+    const unsub = onSnapshot(collection(db, 'compounds'), (snapshot) => {
+      setCompoundsList(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    });
+    return () => unsub();
   }, []);
 
   // إضافة وحدة إلى Firestore
@@ -537,6 +550,64 @@ const AdminPanel: React.FC = () => {
     }
     setAboutImagesLoading(false);
   };
+  // إضافة مطور افتراضي سريع
+  const handleQuickAddDev = async (dev: any) => {
+    setLoading(true);
+    try {
+      await addDoc(collection(db, 'developers'), { name: dev.name, country: dev.country, logo: dev.logo||'' });
+      setSuccess('تمت إضافة المطور بنجاح!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في إضافة المطور: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setLoading(false);
+  };
+  // إضافة كمباوند افتراضي سريع
+  const handleQuickAddCompound = async (cmp: any) => {
+    setLoading(true);
+    try {
+      await addDoc(collection(db, 'compounds'), cmp);
+      setSuccess('تمت إضافة الكمباوند بنجاح!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في إضافة الكمباوند: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setLoading(false);
+  };
+  // إضافة مطور جديد من النموذج
+  const handleAddDevInline = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await addDoc(collection(db, 'developers'), devForm);
+      setDevForm({ name: '', country: '' });
+      setShowAddDev(false);
+      setSuccess('تمت إضافة المطور بنجاح!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في إضافة المطور: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setLoading(false);
+  };
+  // إضافة كمباوند جديد من النموذج
+  const handleAddCompoundInline = async (e: any) => {
+    e.preventDefault();
+    setLoading(true);
+    try {
+      await addDoc(collection(db, 'compounds'), compoundForm);
+      setCompoundForm({ name: '', city: '', country: '', developer: '', logo: '' });
+      setShowAddCompound(false);
+      setSuccess('تمت إضافة الكمباوند بنجاح!');
+      setError(null);
+    } catch (err: any) {
+      setError('خطأ في إضافة الكمباوند: ' + (err?.message || String(err)));
+      setSuccess(null);
+    }
+    setLoading(false);
+  };
 
   const allTabs = [...TABS, { key: 'التواصل', label: 'روابط التواصل' }];
 
@@ -596,11 +667,58 @@ const AdminPanel: React.FC = () => {
               <input value={unitForm.vrUrl} onChange={e=>setUnitForm(f=>({...f,vrUrl:e.target.value}))} placeholder="رابط VR أو 3D" style={{margin:4,padding:8,borderRadius:8}} />
               <input value={unitForm.panoramaUrl} onChange={e=>setUnitForm(f=>({...f,panoramaUrl:e.target.value}))} placeholder="رابط صورة بانوراما" style={{margin:4,padding:8,borderRadius:8}} />
               <input value={unitForm.model3dUrl} onChange={e=>setUnitForm(f=>({...f,model3dUrl:e.target.value}))} placeholder="رابط نموذج 3D" style={{margin:4,padding:8,borderRadius:8}} />
-              <select value={unitForm.developerId} onChange={e=>setUnitForm(f=>({...f,developerId:e.target.value}))} style={{margin:4,padding:8,borderRadius:8}} required>
-                <option value="">اختر المطور</option>
-                {devs.map((d:any)=>(<option key={d.id} value={d.id}>{d.name}</option>))}
-              </select>
-              <input value={unitForm.compound} onChange={e=>setUnitForm(f=>({...f,compound:e.target.value}))} placeholder="اسم الكمبوند (اختياري)" style={{margin:4,padding:8,borderRadius:8}} />
+              {/* حقل المطور */}
+              <div style={{display:'flex',alignItems:'center',gap:8,width:'100%'}}>
+                <select value={unitForm.developerId} onChange={e=>{
+                  if(e.target.value==='add_new_dev') setShowAddDev(true);
+                  else setUnitForm(f=>({...f,developerId:e.target.value}));
+                }} style={{margin:4,padding:8,borderRadius:8,flex:1}} required>
+                  <option value="">اختر المطور</option>
+                  {devs.length===0 && developers.map((d:any)=>(
+                    <option key={d.id} value={d.id}>{d.name} (إضافة سريعة)</option>
+                  ))}
+                  {devs.map((d:any)=>(<option key={d.id} value={d.id}>{d.name}</option>))}
+                  <option value="add_new_dev">+ إضافة مطور جديد...</option>
+                </select>
+                {devs.length===0 && developers.map((d:any)=>(
+                  <button key={d.id} type="button" onClick={()=>handleQuickAddDev(d)} style={{fontSize:12,background:'#eee',border:'none',borderRadius:6,padding:'4px 8px',marginLeft:2}}>إضافة {d.name}</button>
+                ))}
+              </div>
+              {showAddDev && (
+                <form onSubmit={handleAddDevInline} style={{display:'flex',gap:8,margin:'8px 0'}}>
+                  <input value={devForm.name} onChange={e=>setDevForm(f=>({...f,name:e.target.value}))} placeholder="اسم المطور" style={{padding:6,borderRadius:6}} required />
+                  <input value={devForm.country} onChange={e=>setDevForm(f=>({...f,country:e.target.value}))} placeholder="الدولة" style={{padding:6,borderRadius:6}} required />
+                  <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:'bold'}}>حفظ المطور</button>
+                  <button type="button" onClick={()=>setShowAddDev(false)} style={{background:'#eee',border:'none',borderRadius:6,padding:'6px 10px',fontWeight:'bold'}}>إلغاء</button>
+                </form>
+              )}
+              {/* حقل الكمباوند */}
+              <div style={{display:'flex',alignItems:'center',gap:8,width:'100%'}}>
+                <select value={unitForm.compound} onChange={e=>{
+                  if(e.target.value==='add_new_compound') setShowAddCompound(true);
+                  else setUnitForm(f=>({...f,compound:e.target.value}));
+                }} style={{margin:4,padding:8,borderRadius:8,flex:1}}>
+                  <option value="">اختر الكمباوند (اختياري)</option>
+                  {compoundsList.length===0 && compounds.map((c:any)=>(
+                    <option key={c.id} value={c.name}>{c.name} (إضافة سريعة)</option>
+                  ))}
+                  {compoundsList.map((c:any)=>(<option key={c.id} value={c.name}>{c.name}</option>))}
+                  <option value="add_new_compound">+ إضافة كمباوند جديد...</option>
+                </select>
+                {compoundsList.length===0 && compounds.map((c:any)=>(
+                  <button key={c.id} type="button" onClick={()=>handleQuickAddCompound(c)} style={{fontSize:12,background:'#eee',border:'none',borderRadius:6,padding:'4px 8px',marginLeft:2}}>إضافة {c.name}</button>
+                ))}
+              </div>
+              {showAddCompound && (
+                <form onSubmit={handleAddCompoundInline} style={{display:'flex',gap:8,margin:'8px 0'}}>
+                  <input value={compoundForm.name} onChange={e=>setCompoundForm(f=>({...f,name:e.target.value}))} placeholder="اسم الكمباوند" style={{padding:6,borderRadius:6}} required />
+                  <input value={compoundForm.city} onChange={e=>setCompoundForm(f=>({...f,city:e.target.value}))} placeholder="المدينة" style={{padding:6,borderRadius:6}} required />
+                  <input value={compoundForm.country} onChange={e=>setCompoundForm(f=>({...f,country:e.target.value}))} placeholder="الدولة" style={{padding:6,borderRadius:6}} required />
+                  <input value={compoundForm.developer} onChange={e=>setCompoundForm(f=>({...f,developer:e.target.value}))} placeholder="المطور" style={{padding:6,borderRadius:6}} />
+                  <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:6,padding:'6px 16px',fontWeight:'bold'}}>حفظ الكمباوند</button>
+                  <button type="button" onClick={()=>setShowAddCompound(false)} style={{background:'#eee',border:'none',borderRadius:6,padding:'6px 10px',fontWeight:'bold'}}>إلغاء</button>
+                </form>
+              )}
               <input value={unitForm.price} onChange={e=>setUnitForm(f=>({...f,price:e.target.value}))} placeholder="السعر بالجنيه أو العملة" style={{margin:4,padding:8,borderRadius:8}} required />
               <select value={unitForm.paymentType} onChange={e=>setUnitForm(f=>({...f,paymentType:e.target.value}))} style={{margin:4,padding:8,borderRadius:8}} required>
                 <option value="">نوع الدفع</option>
@@ -635,7 +753,7 @@ const AdminPanel: React.FC = () => {
                   {u.vrUrl && <div><a href={u.vrUrl} target="_blank" rel="noopener noreferrer">VR/3D</a></div>}
                   {u.panoramaUrl && <div><a href={u.panoramaUrl} target="_blank" rel="noopener noreferrer">بانوراما</a></div>}
                   {u.model3dUrl && <div><a href={u.model3dUrl} target="_blank" rel="noopener noreferrer">نموذج 3D</a></div>}
-                  <button onClick={()=>handleDeleteUnit(u.id)} style={{position:'absolute',top:8,left:8,background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'2px 10px',fontWeight:'bold',cursor:'pointer'}}>حذف</button>
+                  <button onClick={()=>handleDeleteUnit(u.id)} style={{position:'absolute',top:8,right:8,border:'none',background:'rgba(255,255,255,0.8)',borderRadius:6,padding:'4px 8px',cursor:'pointer',fontSize:12}}>حذف</button>
                 </div>
               ))}
             </div>
@@ -644,17 +762,19 @@ const AdminPanel: React.FC = () => {
         {/* المطورين */}
         {tab==='المطورين' && allowedTabs.includes('المطورين') && (
           <div>
-            <form onSubmit={handleAddDev} style={{marginBottom:24}}>
-              <input value={devForm.name} onChange={e=>setDevForm(f=>({...f,name:e.target.value}))} placeholder="اسم المطور" style={{margin:4,padding:8,borderRadius:8}} required />
-              <input value={devForm.country} onChange={e=>setDevForm(f=>({...f,country:e.target.value}))} placeholder="الدولة" style={{margin:4,padding:8,borderRadius:8}} required />
-              <button type="submit" style={{background:'#2196f3',color:'#fff',border:'none',borderRadius:8,padding:'8px 24px',marginTop:8,cursor:'pointer'}} disabled={loading}>إضافة المطور</button>
+            <form onSubmit={handleAddDev} style={{marginBottom:24,display:'flex',gap:8}}>
+              <input value={devForm.name} onChange={e=>setDevForm(f=>({...f,name:e.target.value}))} placeholder="اسم المطور" style={{padding:8,borderRadius:8}} required />
+              <input value={devForm.country} onChange={e=>setDevForm(f=>({...f,country:e.target.value}))} placeholder="الدولة" style={{padding:8,borderRadius:8}} required />
+              <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold'}} disabled={loading}>إضافة مطور</button>
             </form>
+            {/* عرض المطورين */}
             <div style={{display:'flex',flexWrap:'wrap',gap:16}}>
-              {devs.map((d:any) => (
-                <div key={d.id} style={{border:'1px solid #eee',borderRadius:12,padding:12,minWidth:180,maxWidth:220,position:'relative'}}>
+              {devs.map((d)=>(
+                <div key={d.id} style={{border:'1px solid #eee',borderRadius:12,padding:12,minWidth:220,maxWidth:260,position:'relative'}}>
                   <b>{d.name}</b>
-                  <div>{d.country}</div>
-                  <button onClick={()=>handleDeleteDev(d.id)} style={{position:'absolute',top:8,left:8,background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'2px 10px',fontWeight:'bold',cursor:'pointer'}}>حذف</button>
+                  <div>الدولة: {d.country}</div>
+                  {d.logo && <img src={d.logo} alt="شعار المطور" style={{width:'100%',borderRadius:8,marginTop:8}} />}
+                  <button onClick={()=>handleDeleteDev(d.id)} style={{position:'absolute',top:8,right:8,border:'none',background:'rgba(255,255,255,0.8)',borderRadius:6,padding:'4px 8px',cursor:'pointer',fontSize:12}}>حذف</button>
                 </div>
               ))}
             </div>
@@ -663,136 +783,151 @@ const AdminPanel: React.FC = () => {
         {/* المستخدمون */}
         {tab==='المستخدمون' && allowedTabs.includes('المستخدمون') && (
           <div>
-            <form onSubmit={handleAddUser} style={{marginBottom:24}}>
-              <input value={userForm.name} onChange={e=>setUserForm(f=>({...f,name:e.target.value}))} placeholder="اسم المستخدم" style={{margin:4,padding:8,borderRadius:8}} required />
-              <input value={userForm.username} onChange={e=>setUserForm(f=>({...f,username:e.target.value}))} placeholder="اسم الدخول" style={{margin:4,padding:8,borderRadius:8}} required />
-              <input value={userForm.password} onChange={e=>setUserForm(f=>({...f,password:e.target.value}))} placeholder="كلمة السر" type="password" style={{margin:4,padding:8,borderRadius:8}} required />
+            <form onSubmit={handleAddUser} style={{marginBottom:24,display:'flex',flexWrap:'wrap',gap:8}}>
+              <input value={userForm.name} onChange={e=>setUserForm(f=>({...f,name:e.target.value}))} placeholder="الاسم" style={{margin:4,padding:8,borderRadius:8}} required />
+              <input value={userForm.username} onChange={e=>setUserForm(f=>({...f,username:e.target.value}))} placeholder="اسم المستخدم" style={{margin:4,padding:8,borderRadius:8}} required />
+              <input value={userForm.password} onChange={e=>setUserForm(f=>({...f,password:e.target.value}))} placeholder="كلمة المرور" type="password" style={{margin:4,padding:8,borderRadius:8}} required />
               <select value={userForm.role} onChange={e=>setUserForm(f=>({...f,role:e.target.value}))} style={{margin:4,padding:8,borderRadius:8}} required>
                 <option value="موظف">موظف</option>
                 <option value="مدير">مدير</option>
                 <option value="مطور">مطور</option>
               </select>
-              <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold',margin:4}}>إضافة مستخدم</button>
+              <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold'}} disabled={loading}>إضافة مستخدم</button>
             </form>
+            {/* عرض المستخدمين */}
             <div style={{display:'flex',flexWrap:'wrap',gap:16}}>
-              {users.map((u:any) => (
-                <div key={u.id} style={{border:'1px solid #eee',borderRadius:12,padding:12,minWidth:180,maxWidth:220,position:'relative'}}>
+              {users.map((u)=>(
+                <div key={u.id} style={{border:'1px solid #eee',borderRadius:12,padding:12,minWidth:220,maxWidth:260,position:'relative'}}>
                   <b>{u.name}</b>
-                  <div>اسم الدخول: {u.username}</div>
+                  <div>اسم المستخدم: {u.username}</div>
                   <div>الدور: {u.role}</div>
-                  <button onClick={()=>handleDeleteUser(u.id)} style={{position:'absolute',top:8,left:8,background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'2px 10px',fontWeight:'bold',cursor:'pointer'}}>حذف</button>
+                  <button onClick={()=>handleDeleteUser(u.id)} style={{position:'absolute',top:8,right:8,border:'none',background:'rgba(255,255,255,0.8)',borderRadius:6,padding:'4px 8px',cursor:'pointer',fontSize:12}}>حذف</button>
                 </div>
               ))}
             </div>
           </div>
         )}
-        {/* روابط التواصل */}
-        {tab==='التواصل' && (
-          <form onSubmit={handleSaveContacts} style={{maxWidth:400,margin:'0 auto',display:'flex',flexDirection:'column',gap:12}}>
-            <h3 style={{color:'#00bcd4',marginBottom:8}}>روابط وأرقام التواصل</h3>
-            <input value={contacts.whatsapp} onChange={e=>setContacts(f=>({...f,whatsapp:e.target.value}))} placeholder="رقم واتساب (دولي)" style={{padding:8,borderRadius:8}} required />
-            <input value={contacts.phone} onChange={e=>setContacts(f=>({...f,phone:e.target.value}))} placeholder="رقم اتصال" style={{padding:8,borderRadius:8}} required />
-            <input value={contacts.facebook} onChange={e=>setContacts(f=>({...f,facebook:e.target.value}))} placeholder="رابط فيسبوك" style={{padding:8,borderRadius:8}} />
-            <input value={contacts.snapchat} onChange={e=>setContacts(f=>({...f,snapchat:e.target.value}))} placeholder="رابط سناب شات" style={{padding:8,borderRadius:8}} />
-            <input value={contacts.twitter} onChange={e=>setContacts(f=>({...f,twitter:e.target.value}))} placeholder="رابط تويتر" style={{padding:8,borderRadius:8}} />
-            <input value={contacts.instagram} onChange={e=>setContacts(f=>({...f,instagram:e.target.value}))} placeholder="رابط انستجرام" style={{padding:8,borderRadius:8}} />
-            <input value={contacts.telegram} onChange={e=>setContacts(f=>({...f,telegram:e.target.value}))} placeholder="رابط تيليجرام" style={{padding:8,borderRadius:8}} />
-            <input value={contacts.discord} onChange={e=>setContacts(f=>({...f,discord:e.target.value}))} placeholder="رابط ديسكورد" style={{padding:8,borderRadius:8}} />
-            <input value={contacts.gmail} onChange={e=>setContacts(f=>({...f,gmail:e.target.value}))} placeholder="بريد إلكتروني (Gmail)" style={{padding:8,borderRadius:8}} />
-            <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:17,marginTop:8}} disabled={contactsLoading}>حفظ</button>
-          </form>
+        {/* الإعلانات */}
+        {tab==='الإعلانات' && allowedTabs.includes('الإعلانات') && (
+          <div>
+            <p>قريباً...</p>
+          </div>
+        )}
+        {/* الإعدادات */}
+        {tab==='الإعدادات' && allowedTabs.includes('الإعدادات') && (
+          <div>
+            {/* بيانات التواصل */}
+            <div style={{marginBottom:32}}>
+              <div style={{fontSize:18,fontWeight:'bold',marginBottom:16}}>بيانات التواصل</div>
+              <form onSubmit={handleSaveContacts} style={{display:'flex',flexDirection:'column',gap:12}}>
+                <input value={contacts.phone} onChange={e=>setContacts(c=>({...c,phone:e.target.value}))} placeholder="رقم الهاتف" style={{padding:8,borderRadius:8}} />
+                <input value={contacts.whatsapp} onChange={e=>setContacts(c=>({...c,whatsapp:e.target.value}))} placeholder="رقم واتساب" style={{padding:8,borderRadius:8}} />
+                <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold'}} disabled={contactsLoading}>حفظ البيانات</button>
+              </form>
+            </div>
+            {/* نص "من نحن" */}
+            <div style={{marginBottom:32}}>
+              <div style={{fontSize:18,fontWeight:'bold',marginBottom:16}}>نبذة عن التطبيق</div>
+              <form onSubmit={handleSaveAbout} style={{display:'flex',flexDirection:'column',gap:12}}>
+                <textarea value={aboutText} onChange={e=>setAboutText(e.target.value)} placeholder="اكتب نبذة عن التطبيق هنا..." style={{padding:8,borderRadius:8,minHeight:100}} />
+                <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold'}} disabled={aboutLoading}>حفظ النص</button>
+              </form>
+            </div>
+            {/* الشركاء */}
+            <div style={{marginBottom:32}}>
+              <div style={{fontSize:18,fontWeight:'bold',marginBottom:16}}>الشركاء</div>
+              <form onSubmit={handleAddPartner} style={{display:'flex',gap:8,marginBottom:16}}>
+                <input value={partnerForm.name} onChange={e=>setPartnerForm(f=>({...f,name:e.target.value}))} placeholder="اسم الشريك" style={{padding:8,borderRadius:8}} required />
+                <input value={partnerForm.url} onChange={e=>setPartnerForm(f=>({...f,url:e.target.value}))} placeholder="رابط الموقع" style={{padding:8,borderRadius:8}} />
+                <input type="file" onChange={e=>setPartnerImageFile(e.target.files?.[0]||null)} style={{padding:8,borderRadius:8}} />
+                <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold'}} disabled={partnersLoading}>إضافة شريك</button>
+              </form>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {partners.map((p,idx)=>(
+                  <div key={idx} style={{display:'flex',alignItems:'center',gap:8,border:'1px solid #eee',borderRadius:12,padding:12}}>
+                    <img src={p.image} alt={p.name} style={{width:40,height:40,borderRadius:20,objectFit:'cover'}} />
+                    <div style={{flex:1}}>
+                      <div style={{fontWeight:'bold'}}>{p.name}</div>
+                      <div style={{color:'#666'}}>{p.url}</div>
+                    </div>
+                    <button onClick={()=>handleDeletePartner(idx)} style={{border:'none',background:'rgba(255,255,255,0.8)',borderRadius:6,padding:'6px 12px',cursor:'pointer',fontSize:12}}>حذف</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* إعدادات الشريط المتحرك */}
+            <div style={{marginBottom:32}}>
+              <div style={{fontSize:18,fontWeight:'bold',marginBottom:16}}>إعدادات الشريط المتحرك</div>
+              <form onSubmit={handleSaveMarquee} style={{display:'flex',flexDirection:'column',gap:12}}>
+                <textarea value={marquee.texts.join('\n')} onChange={e=>setMarquee(m=>({...m,texts:e.target.value.split('\n')}))} placeholder="نص الشريط المتحرك (سطر واحد لكل رسالة)" style={{padding:8,borderRadius:8,minHeight:100}} />
+                <div style={{display:'flex',gap:8}}>
+                  <input value={marquee.speed} onChange={e=>setMarquee(m=>({...m,speed:e.target.value}))} placeholder="سرعة الحركة (بالبكسل)" style={{padding:8,borderRadius:8,width:'50%'}} />
+                  <input value={marquee.color} onChange={e=>setMarquee(m=>({...m,color:e.target.value}))} placeholder="لون النص" style={{padding:8,borderRadius:8,width:'50%'}} />
+                </div>
+                <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold'}} disabled={marqueeLoading}>حفظ الإعدادات</button>
+              </form>
+            </div>
+            {/* سلايدر الصور */}
+            <div style={{marginBottom:32}}>
+              <div style={{fontSize:18,fontWeight:'bold',marginBottom:16}}>صور السلايدر</div>
+              <form onSubmit={handleAddSliderImages} style={{display:'flex',gap:8,marginBottom:16}}>
+                <input type="file" multiple accept="image/*" onChange={e=>setSliderFiles(Array.from(e.target.files||[]))} style={{padding:8,borderRadius:8}} />
+                <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold'}} disabled={sliderLoading}>رفع الصور</button>
+              </form>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {sliderImages.map((img,idx)=>(
+                  <div key={idx} style={{display:'flex',alignItems:'center',gap:8,border:'1px solid #eee',borderRadius:12,padding:12}}>
+                    <img src={img} alt={`سلايدر ${idx+1}`} style={{width:100,height:100,borderRadius:8,objectFit:'cover'}} />
+                    <button onClick={()=>handleDeleteSliderImage(idx)} style={{border:'none',background:'rgba(255,255,255,0.8)',borderRadius:6,padding:'6px 12px',cursor:'pointer',fontSize:12}}>حذف</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* صور من نحن */}
+            <div>
+              <div style={{fontSize:18,fontWeight:'bold',marginBottom:16}}>صور من نحن</div>
+              <form onSubmit={handleAddAboutImages} style={{display:'flex',gap:8,marginBottom:16}}>
+                <input type="file" multiple accept="image/*" onChange={e=>setAboutImageFiles(Array.from(e.target.files||[]))} style={{padding:8,borderRadius:8}} />
+                <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'8px 20px',fontWeight:'bold'}} disabled={aboutImagesLoading}>رفع الصور</button>
+              </form>
+              <div style={{display:'flex',flexDirection:'column',gap:8}}>
+                {aboutImages.map((img,idx)=>(
+                  <div key={idx} style={{display:'flex',alignItems:'center',gap:8,border:'1px solid #eee',borderRadius:12,padding:12}}>
+                    <img src={img} alt={`صورة من نحن ${idx+1}`} style={{width:100,height:100,borderRadius:8,objectFit:'cover'}} />
+                    <button onClick={()=>handleDeleteAboutImage(idx)} style={{border:'none',background:'rgba(255,255,255,0.8)',borderRadius:6,padding:'6px 12px',cursor:'pointer',fontSize:12}}>حذف</button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         )}
         {/* من نحن */}
         {tab==='من نحن' && (
-          <>
-          <form onSubmit={handleSaveAbout} style={{maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:12}}>
-            <h3 style={{color:'#00bcd4',marginBottom:8}}>تعديل نبذة من نحن</h3>
-            <textarea value={aboutText} onChange={e=>setAboutText(e.target.value)} placeholder="اكتب نبذة عن المنصة..." style={{padding:12,borderRadius:8,minHeight:120,fontSize:17}} required />
-            <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:17,marginTop:8}} disabled={aboutLoading}>حفظ</button>
-          </form>
-          <form onSubmit={handleAddAboutImages} style={{maxWidth:600,margin:'24px auto',display:'flex',flexDirection:'column',gap:12}}>
-            <h4 style={{color:'#00bcd4'}}>صور من نحن</h4>
-            <input type="file" accept="image/*" multiple onChange={e=>setAboutImageFiles(Array.from(e.target.files||[]))} style={{padding:8,borderRadius:8}} />
-            <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:15,marginTop:8}} disabled={aboutImagesLoading}>إضافة صور</button>
-            <div style={{display:'flex',flexWrap:'wrap',gap:12,marginTop:8}}>
-              {aboutImages.map((img,i)=>(
-                <div key={i} style={{position:'relative'}}>
-                  <img src={img} alt="about" style={{width:80,height:80,borderRadius:8,objectFit:'cover',border:'2px solid #00bcd4'}} />
-                  <button type="button" onClick={()=>handleDeleteAboutImage(i)} style={{position:'absolute',top:2,right:2,background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'2px 8px',fontWeight:'bold',cursor:'pointer',fontSize:13}}>×</button>
-                </div>
-              ))}
-            </div>
-          </form>
-          </>
+          <div>
+            <div style={{fontSize:22,color:'#00bcd4',fontWeight:'bold',marginBottom:16}}>من نحن</div>
+            <p style={{lineHeight:1.6}}>
+              نحن شركة رائدة في مجال تطوير التطبيقات العقارية، نسعى لتقديم أفضل الحلول التكنولوجية لمستخدمينا الكرام. فريقنا مكون من محترفين ذوي خبرة عالية في مجالات البرمجة، التصميم، والتسويق العقاري.
+            </p>
+            <p style={{lineHeight:1.6}}>
+              مهمتنا هي تسهيل عملية البحث عن العقارات وتوفير منصة موثوقة تربط بين المطورين، الوسطاء، والمشترين. نحن نؤمن بأهمية الابتكار والتطوير المستمر لتلبية احتياجات سوق العقارات المتغيرة.
+            </p>
+            <p style={{lineHeight:1.6}}>
+              رؤيتنا هي أن نكون الخيار الأول في مجال التطبيقات العقارية في الشرق الأوسط، من خلال تقديم خدمات متميزة وتجربة مستخدم فريدة.
+            </p>
+          </div>
         )}
         {/* الشركاء */}
         {tab==='الشركاء' && (
-          <div style={{maxWidth:600,margin:'0 auto'}}>
-            <form onSubmit={handleAddPartner} style={{display:'flex',flexDirection:'column',gap:10,marginBottom:24}}>
-              <h3 style={{color:'#00bcd4',marginBottom:8}}>إضافة شريك جديد</h3>
-              <input value={partnerForm.name} onChange={e=>setPartnerForm(f=>({...f,name:e.target.value}))} placeholder="اسم الشريك" style={{padding:8,borderRadius:8}} required />
-              <input value={partnerForm.url} onChange={e=>setPartnerForm(f=>({...f,url:e.target.value}))} placeholder="رابط الشريك (اختياري)" style={{padding:8,borderRadius:8}} />
-              <input type="file" accept="image/*" onChange={e=>setPartnerImageFile(e.target.files?.[0]||null)} style={{padding:8,borderRadius:8}} required />
-              <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:17,marginTop:8}} disabled={partnersLoading}>إضافة</button>
-            </form>
-            <div style={{display:'flex',flexWrap:'wrap',gap:16}}>
-              {partners.map((p,i)=>(
-                <div key={i} style={{border:'1px solid #eee',borderRadius:12,padding:12,minWidth:180,maxWidth:220,position:'relative',textAlign:'center'}}>
-                  {p.image && <img src={p.image} alt={p.name} style={{width:64,height:64,borderRadius:8,objectFit:'contain',marginBottom:8}} />}
-                  <b>{p.name}</b>
-                  {p.url && <div><a href={p.url} target="_blank" rel="noopener noreferrer" style={{color:'#2196f3',fontSize:15}}>رابط الشريك</a></div>}
-                  <button onClick={()=>handleDeletePartner(i)} style={{position:'absolute',top:8,left:8,background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'2px 10px',fontWeight:'bold',cursor:'pointer'}}>حذف</button>
-                </div>
-              ))}
-            </div>
+          <div>
+            <div style={{fontSize:22,color:'#00bcd4',fontWeight:'bold',marginBottom:16}}>شركاؤنا</div>
+            <p style={{lineHeight:1.6}}>
+              نحن فخورون بشراكتنا مع مجموعة من أفضل الشركات والمطورين في مجال العقارات. شراكاتنا قائمة على الثقة، الشفافية، والاحترافية.
+            </p>
+            <p style={{lineHeight:1.6}}>
+              إذا كنت مطوراً أو شركة مهتمة بالشراكة معنا، لا تتردد في <a href="mailto:info@app.local" style={{color:'#00bcd4',fontWeight:'bold'}}>التواصل معنا عبر البريد الإلكتروني</a>.
+            </p>
           </div>
         )}
-        {/* إعدادات الشريط المتحرك */}
-        {tab==='الإعدادات' && (
-          <form onSubmit={handleSaveMarquee} style={{maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:12,marginBottom:32}}>
-            <h3 style={{color:'#00bcd4',marginBottom:8}}>إعدادات الشريط المتحرك</h3>
-            <div>
-              {marquee.texts.map((txt,i)=>(
-                <div key={i} style={{display:'flex',alignItems:'center',gap:8,marginBottom:4}}>
-                  <input value={txt} onChange={e=>setMarquee(m=>({...m,texts:m.texts.map((t,idx)=>idx===i?e.target.value:t)}))} style={{flex:1,padding:8,borderRadius:8}} />
-                  <button type="button" onClick={()=>setMarquee(m=>({...m,texts:m.texts.filter((_,idx)=>idx!==i)}))} style={{background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'4px 10px',fontWeight:'bold',cursor:'pointer'}}>حذف</button>
-                </div>
-              ))}
-              <button type="button" onClick={()=>setMarquee(m=>({...m,texts:[...m.texts,'']}))} style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'6px 18px',fontWeight:'bold',marginTop:4}}>إضافة نص</button>
-            </div>
-            <div style={{display:'flex',gap:8}}>
-              <label>السرعة:
-                <input type="number" value={marquee.speed} min={5} max={100} onChange={e=>setMarquee(m=>({...m,speed:Number(e.target.value)}))} style={{marginRight:8,padding:6,borderRadius:8,width:80}} />
-              </label>
-              <label>لون الخط:
-                <input type="color" value={marquee.color} onChange={e=>setMarquee(m=>({...m,color:e.target.value}))} style={{marginRight:8,width:40,height:32}} />
-              </label>
-              <label>حجم الخط:
-                <input type="number" value={marquee.fontSize} min={10} max={60} onChange={e=>setMarquee(m=>({...m,fontSize:Number(e.target.value)}))} style={{marginRight:8,padding:6,borderRadius:8,width:80}} />
-              </label>
-            </div>
-            <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:17,marginTop:8}} disabled={marqueeLoading}>حفظ إعدادات الشريط</button>
-          </form>
-        )}
-        {/* سلايدر الصور */}
-        {tab==='الإعدادات' && (
-          <form onSubmit={handleAddSliderImages} style={{maxWidth:600,margin:'0 auto',display:'flex',flexDirection:'column',gap:12,marginBottom:32}}>
-            <h3 style={{color:'#00bcd4',marginBottom:8}}>سلايدر الصور المتحرك</h3>
-            <input type="file" accept="image/*" multiple onChange={e=>setSliderFiles(Array.from(e.target.files||[]))} style={{padding:8,borderRadius:8}} />
-            <button type="submit" style={{background:'#00bcd4',color:'#fff',border:'none',borderRadius:8,padding:'10px 0',fontWeight:'bold',fontSize:17,marginTop:8}} disabled={sliderLoading}>إضافة صور</button>
-            <div style={{display:'flex',flexWrap:'wrap',gap:12,marginTop:8}}>
-              {sliderImages.map((img,i)=>(
-                <div key={i} style={{position:'relative'}}>
-                  <img src={img} alt="slider" style={{width:80,height:80,borderRadius:8,objectFit:'cover',border:'2px solid #00bcd4'}} />
-                  <button type="button" onClick={()=>handleDeleteSliderImage(i)} style={{position:'absolute',top:2,right:2,background:'#e53935',color:'#fff',border:'none',borderRadius:6,padding:'2px 8px',fontWeight:'bold',cursor:'pointer',fontSize:13}}>×</button>
-                </div>
-              ))}
-            </div>
-          </form>
-        )}
-        {/* باقي الأقسام */}
-        {tab!=='الوحدات' && tab!=='المطورين' && tab!=='المستخدمون' && (!allowedTabs.includes(tab)) && <div style={{color:'#888',fontSize:18}}>ليس لديك صلاحية لهذا القسم.</div>}
-        {tab!=='الوحدات' && tab!=='المطورين' && tab!=='المستخدمون' && allowedTabs.includes(tab) && <div style={{color:'#888',fontSize:18}}>سيتم تفعيل هذا القسم قريبًا...</div>}
       </div>
     </div>
   );
