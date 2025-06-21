@@ -79,6 +79,7 @@ export default function Home() {
   const [chatOpen, setChatOpen] = useState(false);
   const [firebaseUnits, setFirebaseUnits] = useState<any[]>([]);
   const [showPano, setShowPano] = useState<string|null>(null);
+  const [showContacts, setShowContacts] = useState(false);
 
   // البحث الذكي
   const handleSmartSearch = (q: string) => {
@@ -387,11 +388,8 @@ export default function Home() {
           <div className="vr-section">
             <VRView src="" />
           </div>
-          <h1 className="section-title">معرض صور بانوراما 360°</h1>
-          <VR360Gallery />
-          <Reviews />
-          <VideoTour />
-          <StatsBox />
+          {/* <Reviews /> */}
+          {/* <StatsBox /> */}
           {/* <AdminPanel /> تم إزالته من الصفحة الرئيسية */}
         </main>
       </div>
@@ -408,6 +406,7 @@ export default function Home() {
     جميع الحقوق محفوظة The team one world criptoman © {new Date().getFullYear()}
   </div>
   {/* معرض صور بانوراما تجريبي */}
+  {/*
   <div style={{textAlign:'center',marginBottom:24}}>
     <div style={{fontWeight:'bold',fontSize:20,color:'#00bcd4',marginBottom:8}}>معرض بانوراما تجريبي</div>
     <div style={{display:'flex',justifyContent:'center',gap:16,flexWrap:'wrap'}}>
@@ -430,46 +429,44 @@ export default function Home() {
       </div>
     )}
   </div>
+  */}
   <div style={{
-    background: 'linear-gradient(90deg,#00bcd4 0%,#2196f3 100%)',
-    color: '#fff',
-    borderRadius: 16,
-    padding: '24px 32px',
-    margin: '32px auto 0 auto',
-    maxWidth: 700,
-    boxShadow: '0 2px 16px #b2ebf2',
-    fontWeight: 'bold',
-    fontSize: 20,
-    textAlign: 'center',
-    letterSpacing: 1
-  }}>
-    <span style={{fontSize:28,display:'block',marginBottom:8}}>من نحن</span>
-    <span>
-      نحن فريق <span style={{color:'#ffeb3b'}}>Realstatelive</span> نؤمن بأن العقار هو استثمار المستقبل، ونعمل على تقديم تجربة رقمية متكاملة تجمع بين أحدث التقنيات (الذكاء الاصطناعي، الواقع الافتراضي، الخرائط الذكية) لتسهيل البحث، المقارنة، واتخاذ القرار العقاري بثقة وشفافية. هدفنا أن نكون المنصة العقارية الأكثر ابتكاراً وموثوقية في العالم العربي، بخدمة احترافية ودعم حقيقي لكل عميل ومطور.
-    </span>
-    <div style={{marginTop:32}}>
-      <span style={{fontSize:22,display:'block',marginBottom:8,color:'#ffeb3b'}}>شركاؤنا</span>
-      <div style={{display:'flex',flexWrap:'wrap',justifyContent:'center',gap:18,alignItems:'center'}}>
-        {developers.filter(d=>d.logo).map((d,i)=>(
-          <img key={i} src={d.logo} alt={d.name} title={d.name} style={{height:48,width:'auto',background:'#fff',borderRadius:12,padding:6,boxShadow:'0 2px 8px #b2ebf2'}} />
-        ))}
+      background: 'linear-gradient(90deg,#00bcd4 0%,#2196f3 100%)',
+      color: '#fff',
+      borderRadius: 16,
+      padding: '24px 32px',
+      margin: '32px auto 0 auto',
+      maxWidth: 700,
+      boxShadow: '0 2px 16px #b2ebf2',
+      fontWeight: 'bold',
+      fontSize: 20,
+      textAlign: 'center',
+      letterSpacing: 1
+    }}>
+      <button onClick={()=>window.location.href='/about'} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'12px 32px',fontWeight:'bold',fontSize:22,cursor:'pointer',marginBottom:16}}>من نحن</button>
+      <div style={{fontSize:16,fontWeight:'normal',color:'#fff',marginBottom:0,marginTop:0}}>
+        نحن فريق Realstatelive نؤمن بأن العقار هو استثمار المستقبل، ونعمل على تقديم تجربة رقمية متكاملة تجمع بين أحدث التقنيات (الذكاء الاصطناعي، الواقع الافتراضي، الخرائط الذكية) لتسهيل البحث، المقارنة، واتخاذ القرار العقاري بثقة وشفافية. هدفنا أن نكون المنصة العقارية الأكثر ابتكاراً وموثوقية في العالم العربي، بخدمة احترافية ودعم حقيقي لكل عميل ومطور.
+      </div>
+      <div style={{marginTop:24}}>
+        <button onClick={()=>setShowContacts(!showContacts)} style={{background:'#fff',color:'#00bcd4',border:'none',borderRadius:8,padding:'12px 32px',fontWeight:'bold',fontSize:20,cursor:'pointer'}}>تواصل معنا</button>
+        {showContacts && (
+          <div style={{marginTop:16,display:'flex',flexWrap:'wrap',justifyContent:'center',gap:18}}>
+            <a href={`https://wa.me/${contacts.whatsapp}`} target="_blank" rel="noopener noreferrer" style={{color:'#25d366',fontSize:28}} title="واتساب"><FaWhatsapp /></a>
+            <a href={`tel:${contacts.phone}`} style={{color:'#fff',fontSize:28}} title="اتصال"><FaPhone /></a>
+            <a href={contacts.facebook} target="_blank" rel="noopener noreferrer" style={{color:'#1877f3',fontSize:28}} title="فيسبوك"><FaFacebook /></a>
+            <a href={contacts.snapchat} target="_blank" rel="noopener noreferrer" style={{color:'#fffc00',fontSize:28}} title="سناب شات"><FaSnapchatGhost /></a>
+            <a href={contacts.twitter} target="_blank" rel="noopener noreferrer" style={{color:'#1da1f2',fontSize:28}} title="تويتر"><FaTwitter /></a>
+            <a href={contacts.instagram} target="_blank" rel="noopener noreferrer" style={{color:'#e1306c',fontSize:28}} title="انستجرام"><FaInstagram /></a>
+            <a href={contacts.telegram} target="_blank" rel="noopener noreferrer" style={{color:'#0088cc',fontSize:28}} title="تيليجرام"><FaTelegram /></a>
+            <a href={contacts.discord} target="_blank" rel="noopener noreferrer" style={{color:'#5865f2',fontSize:28}} title="ديسكورد"><FaDiscord /></a>
+            <a href={contacts.gmail} target="_blank" rel="noopener noreferrer" style={{color:'#fff',fontSize:28}} title="Gmail"><FaEnvelope /></a>
+          </div>
+        )}
+      </div>
+      <div style={{marginTop:12,fontSize:16,color:'#fff',fontWeight:'normal'}}>
+        للتواصل السريع: <a href={`tel:${contacts.phone}`} style={{color:'#ffeb3b',textDecoration:'underline'}}>{contacts.phone}</a> أو واتساب: <a href={`https://wa.me/${contacts.whatsapp}`} style={{color:'#25d366',textDecoration:'underline'}}>{contacts.whatsapp}</a>
       </div>
     </div>
-    <div style={{marginTop:24,display:'flex',flexWrap:'wrap',justifyContent:'center',gap:18}}>
-      <a href={`https://wa.me/${contacts.whatsapp}`} target="_blank" rel="noopener noreferrer" style={{color:'#25d366',fontSize:28}} title="واتساب"><FaWhatsapp /></a>
-      <a href={`tel:${contacts.phone}`} style={{color:'#fff',fontSize:28}} title="اتصال"><FaPhone /></a>
-      <a href={contacts.facebook} target="_blank" rel="noopener noreferrer" style={{color:'#1877f3',fontSize:28}} title="فيسبوك"><FaFacebook /></a>
-      <a href={contacts.snapchat} target="_blank" rel="noopener noreferrer" style={{color:'#fffc00',fontSize:28}} title="سناب شات"><FaSnapchatGhost /></a>
-      <a href={contacts.twitter} target="_blank" rel="noopener noreferrer" style={{color:'#1da1f2',fontSize:28}} title="تويتر"><FaTwitter /></a>
-      <a href={contacts.instagram} target="_blank" rel="noopener noreferrer" style={{color:'#e1306c',fontSize:28}} title="انستجرام"><FaInstagram /></a>
-      <a href={contacts.telegram} target="_blank" rel="noopener noreferrer" style={{color:'#0088cc',fontSize:28}} title="تيليجرام"><FaTelegram /></a>
-      <a href={contacts.discord} target="_blank" rel="noopener noreferrer" style={{color:'#5865f2',fontSize:28}} title="ديسكورد"><FaDiscord /></a>
-      <a href={contacts.gmail} target="_blank" rel="noopener noreferrer" style={{color:'#fff',fontSize:28}} title="Gmail"><FaEnvelope /></a>
-    </div>
-    <div style={{marginTop:12,fontSize:16,color:'#fff',fontWeight:'normal'}}>
-      للتواصل السريع: <a href={`tel:${contacts.phone}`} style={{color:'#ffeb3b',textDecoration:'underline'}}>{contacts.phone}</a> أو واتساب: <a href={`https://wa.me/${contacts.whatsapp}`} style={{color:'#25d366',textDecoration:'underline'}}>{contacts.whatsapp}</a>
-    </div>
-  </div>
 </footer>
     </div>
   );

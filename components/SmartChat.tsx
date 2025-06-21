@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { searchPropertiesInText } from '../services/smartChatSearch';
 
 // نموذج دردشة ذكية مجاني (يعتمد على نموذج مفتوح المصدر من HuggingFace)
 const HF_API = 'https://api-inference.huggingface.co/models/microsoft/DialoGPT-medium';
@@ -12,18 +13,18 @@ const SmartChat: React.FC = () => {
     if (!input.trim()) return;
     setMessages([...messages, { from: 'user', text: input }]);
     setLoading(true);
-    try {
-      const res = await fetch(HF_API, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ inputs: { text: input } })
-      });
-      const data = await res.json();
-      const reply = data?.generated_text || '...';
+    // بحث داخلي عن العقارات إذا كان السؤال عقاري
+    const results = searchPropertiesInText(input);
+    if (results.length > 0) {
+      const reply = `وجدت ${results.length} عقار/وحدة:
+` + results.map(r => `• ${r.title} (${r.location}) - ${r.status}`).join('\n');
       setMessages(msgs => [...msgs, { from: 'bot', text: reply }]);
-    } catch {
-      setMessages(msgs => [...msgs, { from: 'bot', text: 'حدث خطأ في الاتصال بالنموذج المجاني.' }]);
+      setInput('');
+      setLoading(false);
+      return;
     }
+    // إذا لم يكن السؤال عقاري، رد افتراضي بسيط
+    setMessages(msgs => [...msgs, { from: 'bot', text: 'شكرًا لسؤالك! يمكنك البحث عن عقار بكتابة نوع العقار أو المدينة (مثال: شقة في الشيخ زايد).' }]);
     setInput('');
     setLoading(false);
   };
